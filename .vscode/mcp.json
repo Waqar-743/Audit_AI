@@ -1,0 +1,22 @@
+{
+	"servers": {
+		"my-mcp-server-e712dbe8": {
+			"type": "stdio",
+			"command": "{",
+			"args": [
+				"servers:",
+				"{",
+				"supabase:",
+				"{",
+				"type:",
+				"http,",
+				"url:",
+				"https://mcp.supabase.com/mcp?project_ref=nbvsqlagropeoagxnwxr",
+				"}",
+				"}",
+				"}"
+			]
+		}
+	},
+	"inputs": []
+}
