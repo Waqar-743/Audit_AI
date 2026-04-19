@@ -12,6 +12,9 @@ const STEPS = [
 ];
 
 const PCTS = [10, 28, 47, 65, 82, 98];
+const MAX_CONSECUTIVE_FETCH_ERRORS = 3;
+const PENDING_TIMEOUT_MS = 60_000;
+const POLL_FAILURE_MESSAGE = "Scan failed or timed out. Please try again.";
 
 interface ScanModalProps {
   url: string;
@@ -27,14 +30,42 @@ export default function ScanModal({ url, scanId, onComplete, onClose }: ScanModa
   const [complete, setComplete] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const consecutiveErrorCountRef = useRef(0);
+  const pendingSinceRef = useRef<number | null>(null);
+  const isErrorState = stepText.startsWith("✗");
 
   useEffect(() => {
     // If we have a real scanId, poll for status
     if (scanId && scanId !== "demo") {
+      consecutiveErrorCountRef.current = 0;
+      pendingSinceRef.current = null;
+
+      const stopPollingWithError = (message: string) => {
+        setStepText(`✗ ${message}`);
+        if (pollRef.current) clearInterval(pollRef.current);
+      };
+
       pollRef.current = setInterval(async () => {
         try {
           const res = await fetch(`/api/scan/${scanId}/status`);
+          if (!res.ok) {
+            throw new Error(`Status request failed with HTTP ${res.status}`);
+          }
+
           const data = await res.json();
+          consecutiveErrorCountRef.current = 0;
+
+          if (data.status === "pending") {
+            if (pendingSinceRef.current === null) {
+              pendingSinceRef.current = Date.now();
+            } else if (Date.now() - pendingSinceRef.current > PENDING_TIMEOUT_MS) {
+              stopPollingWithError(POLL_FAILURE_MESSAGE);
+              return;
+            }
+          } else {
+            pendingSinceRef.current = null;
+          }
+
           if (data.step !== undefined) {
             setCurrentStep(data.step);
             setProgress(data.progress || PCTS[data.step] || 0);
@@ -48,11 +79,13 @@ export default function ScanModal({ url, scanId, onComplete, onClose }: ScanModa
             setTimeout(onComplete, 1200);
           }
           if (data.status === "error") {
-            setStepText("✗ Error: " + (data.error || "Unknown error"));
-            if (pollRef.current) clearInterval(pollRef.current);
+            stopPollingWithError(data.error || POLL_FAILURE_MESSAGE);
           }
         } catch {
-          // keep polling
+          consecutiveErrorCountRef.current += 1;
+          if (consecutiveErrorCountRef.current >= MAX_CONSECUTIVE_FETCH_ERRORS) {
+            stopPollingWithError(POLL_FAILURE_MESSAGE);
+          }
         }
       }, 1000);
 
@@ -99,13 +132,19 @@ export default function ScanModal({ url, scanId, onComplete, onClose }: ScanModa
         className="bg-bg2 border border-border-hover p-12 w-[480px] max-w-[90vw]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="font-mono text-[10px] tracking-[0.12em] text-accent mb-5">{"// SCANNING IN PROGRESS"}</div>
+        <div
+          className={`font-mono text-[10px] tracking-[0.12em] mb-5 ${isErrorState ? "text-red" : "text-accent"}`}
+        >
+          {isErrorState ? "// SCAN ERROR" : "// SCANNING IN PROGRESS"}
+        </div>
         <h2 className="font-serif text-[28px] mb-2">Analyzing your site</h2>
         <div className="font-mono text-xs text-muted mb-8">https://{url}</div>
 
         {/* Progress */}
         <div className="mb-7">
-          <div className="font-mono text-xs text-muted mb-3 min-h-[18px]">
+          <div
+            className={`font-mono text-xs mb-3 min-h-[18px] ${isErrorState ? "text-red" : "text-muted"}`}
+          >
             {stepText}
           </div>
           <div className="h-[2px] bg-border overflow-hidden">

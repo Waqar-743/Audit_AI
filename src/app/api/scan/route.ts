@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createScan, updateScan, completeScan, failScan } from "@/lib/scan-store";
-import { runFullScan } from "@/lib/scanner/scorer";
+import { createScan, updateScan, failScan } from "@/lib/scan-store";
 import { z } from "zod";
 
-const STEP_PROGRESS = [10, 28, 47, 65, 82, 98];
 const scanRequestSchema = z.object({
   url: z.string().trim().min(1, "URL is required"),
+});
+
+const qstashPayloadSchema = z.object({
+  scanId: z.string().trim().min(1),
+  url: z.string().trim().min(1),
 });
 
 export async function POST(req: NextRequest) {
@@ -22,22 +25,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
     }
 
-    const reachable = await checkReachability(cleanUrl);
-    if (!reachable) {
-      return NextResponse.json(
-        { error: "Website is not reachable. Please check the URL and try again." },
-        { status: 400 }
-      );
-    }
-
     const scanId = crypto.randomUUID();
     await createScan(scanId, cleanUrl);
+    await updateScan(scanId, {
+      status: "pending",
+      step: 0,
+      progress: 0,
+      stepText: "Queued for processing...",
+    });
 
-    // Run scan asynchronously (fire and forget)
-    runScanAsync(scanId, cleanUrl);
+    try {
+      await enqueueScanJob(req, { scanId, url: cleanUrl });
+    } catch (queueError) {
+      const queueErrorMessage =
+        queueError instanceof Error ? queueError.message : "Failed to queue scan job";
+      await failScan(scanId, queueErrorMessage);
+      return NextResponse.json({ error: "Failed to queue scan job" }, { status: 500 });
+    }
 
     return NextResponse.json({ scanId, url: cleanUrl });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to start scan" },
       { status: 500 }
@@ -45,25 +52,73 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function runScanAsync(scanId: string, url: string) {
-  try {
-    await updateScan(scanId, { status: "crawling" });
+async function enqueueScanJob(
+  req: NextRequest,
+  payload: z.infer<typeof qstashPayloadSchema>
+): Promise<void> {
+  const validated = qstashPayloadSchema.parse(payload);
+  const qstashToken = process.env.QSTASH_TOKEN?.trim();
 
-    const result = await runFullScan(url, (step, text) => {
-      void updateScan(scanId, {
-        step,
-        stepText: text,
-        progress: STEP_PROGRESS[step] || 0,
-        status: step < 5 ? "analyzing" : "complete",
-      });
-    });
-
-    // Override the ID in result with our scanId
-    result.id = scanId;
-    await completeScan(scanId, result);
-  } catch (error) {
-    await failScan(scanId, error instanceof Error ? error.message : "Scan failed");
+  if (!qstashToken) {
+    throw new Error("QSTASH_TOKEN is not configured");
   }
+
+  const workerWebhookUrl = resolveWorkerWebhookUrl(req);
+  const qstashBaseUrl = process.env.QSTASH_URL?.trim() || "https://qstash.upstash.io";
+  const workerSecret = process.env.SCAN_WORKER_SECRET?.trim();
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${qstashToken}`,
+    "Content-Type": "application/json",
+    "Upstash-Retries": "3",
+    "Upstash-Content-Based-Deduplication": "true",
+  };
+
+  if (workerSecret) {
+    headers["Upstash-Forward-x-scan-worker-secret"] = workerSecret;
+  }
+
+  const response = await fetch(
+    `${qstashBaseUrl}/v2/publish/${workerWebhookUrl}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(validated),
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    }
+  );
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    throw new Error(
+      `QStash publish failed (${response.status}): ${responseText.slice(0, 220)}`
+    );
+  }
+
+  await updateScan(validated.scanId, {
+    status: "pending",
+    step: 0,
+    progress: 5,
+    stepText: "Scan queued. Waiting for worker...",
+  });
+}
+
+function resolveWorkerWebhookUrl(req: NextRequest): string {
+  const configuredWebhookUrl = process.env.SCAN_WORKER_WEBHOOK_URL?.trim();
+  if (configuredWebhookUrl) {
+    return configuredWebhookUrl;
+  }
+
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+  if (!host) {
+    throw new Error("Unable to resolve worker webhook URL");
+  }
+
+  const protocol =
+    req.headers.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
+
+  return `${protocol}://${host}/api/webhooks/scan`;
 }
 
 function normalizeUrl(rawUrl: string): string {
@@ -77,31 +132,4 @@ function isValidTarget(target: string): boolean {
   } catch {
     return false;
   }
-}
-
-async function checkReachability(target: string): Promise<boolean> {
-  const candidates = [`https://${target}`, `http://${target}`];
-
-  for (const candidate of candidates) {
-    try {
-      const response = await fetch(candidate, {
-        method: "GET",
-        redirect: "follow",
-        cache: "no-store",
-        signal: AbortSignal.timeout(12000),
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; AuditAI/1.0)",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-      });
-
-      if (response.status >= 200 && response.status < 500) {
-        return true;
-      }
-    } catch {
-      // Try next candidate.
-    }
-  }
-
-  return false;
 }

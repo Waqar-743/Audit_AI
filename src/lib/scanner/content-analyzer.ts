@@ -14,6 +14,16 @@ type ContentAiAnalysis = {
   summary: string;
 };
 
+const GEMINI_TIMEOUT_MS = 15_000;
+const FALLBACK_SUMMARY_MARKER = "neutral fallback metrics";
+
+const NEUTRAL_AI_ANALYSIS: Omit<ContentAiAnalysis, "summary"> = {
+  readabilityScore: 5,
+  factualDensity: 5,
+  answerFocused: 5,
+  authorAttribution: 5,
+};
+
 const aiAnalysisSchema = z
   .object({
     readabilityScore: z.coerce.number().min(1).max(10),
@@ -199,7 +209,7 @@ export async function analyzeContent(
   if (apiKey && crawl.textContent.length > 100) {
     try {
       aiAnalysis = await runAiAnalysis(crawl.textContent, apiKey);
-      if (aiAnalysis) {
+      if (aiAnalysis && !isFallbackAiAnalysis(aiAnalysis)) {
         // Boost score based on AI analysis
         score += Math.round(
           (aiAnalysis.readabilityScore +
@@ -208,8 +218,9 @@ export async function analyzeContent(
             3
         );
       }
-    } catch {
-      // AI analysis unavailable — skip
+    } catch (error) {
+      console.warn("[content-analyzer] Gemini analysis crashed unexpectedly", error);
+      aiAnalysis = createFallbackAiAnalysis("unexpected-error");
     }
   }
 
@@ -223,7 +234,7 @@ export async function analyzeContent(
 async function runAiAnalysis(
   textContent: string,
   apiKey: string
-): Promise<ContentAiAnalysis | null> {
+): Promise<ContentAiAnalysis> {
   // Keep prompt bounded for stable latency while still allowing deep analysis.
   const content = textContent.slice(0, 12000);
 
@@ -252,37 +263,57 @@ Rules:
 Analyze this content:
 ${content}`;
 
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.2,
-      maxOutputTokens: 400,
-    },
-  });
+  try {
+    const result = await withTimeout(
+      model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.2,
+          maxOutputTokens: 400,
+        },
+      }),
+      GEMINI_TIMEOUT_MS,
+      `Gemini request timed out after ${GEMINI_TIMEOUT_MS}ms`
+    );
 
-  const raw = result.response.text().trim();
-  if (!raw) {
-    return null;
+    const raw = result.response.text().trim();
+    if (!raw) {
+      console.warn("[content-analyzer] Gemini returned empty response");
+      return createFallbackAiAnalysis("empty-response");
+    }
+
+    const parsed = parseModelJson(raw);
+    if (!parsed) {
+      console.warn("[content-analyzer] Gemini returned non-JSON response");
+      return createFallbackAiAnalysis("invalid-json");
+    }
+
+    const validated = aiAnalysisSchema.safeParse(parsed);
+    if (!validated.success) {
+      console.warn(
+        "[content-analyzer] Gemini response failed schema validation",
+        validated.error.issues
+      );
+      return createFallbackAiAnalysis("invalid-schema");
+    }
+
+    return {
+      readabilityScore: clampScore(validated.data.readabilityScore),
+      factualDensity: clampScore(validated.data.factualDensity),
+      answerFocused: clampScore(validated.data.answerFocused),
+      authorAttribution: clampScore(validated.data.authorAttribution),
+      summary: validated.data.summary.trim(),
+    };
+  } catch (error) {
+    console.warn(
+      "[content-analyzer] Gemini analysis failed, using fallback metrics",
+      error
+    );
+    return createFallbackAiAnalysis(
+      error instanceof Error ? error.message : "request-failed"
+    );
   }
-
-  const parsed = parseModelJson(raw);
-  if (!parsed) {
-    return null;
-  }
-
-  const validated = aiAnalysisSchema.safeParse(parsed);
-  if (!validated.success) {
-    return null;
-  }
-
-  return {
-    readabilityScore: clampScore(validated.data.readabilityScore),
-    factualDensity: clampScore(validated.data.factualDensity),
-    answerFocused: clampScore(validated.data.answerFocused),
-    authorAttribution: clampScore(validated.data.authorAttribution),
-    summary: validated.data.summary.trim(),
-  };
 }
 
 function parseModelJson(raw: string): unknown | null {
@@ -308,4 +339,38 @@ function clampScore(value: number): number {
     return 1;
   }
   return Math.max(1, Math.min(10, Math.round(value)));
+}
+
+function createFallbackAiAnalysis(reason: string): ContentAiAnalysis {
+  const normalizedReason = reason.trim().slice(0, 120) || "unknown";
+  return {
+    ...NEUTRAL_AI_ANALYSIS,
+    summary: `AI analysis unavailable (${normalizedReason}); ${FALLBACK_SUMMARY_MARKER} applied.`,
+  };
+}
+
+function isFallbackAiAnalysis(analysis: ContentAiAnalysis): boolean {
+  return analysis.summary.toLowerCase().includes(FALLBACK_SUMMARY_MARKER);
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }

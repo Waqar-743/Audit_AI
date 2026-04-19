@@ -8,6 +8,10 @@ import ScoreRing from "@/components/results/ScoreRing";
 import PillarBreakdown from "@/components/results/PillarBreakdown";
 import IssueList from "@/components/results/IssueList";
 
+const MAX_CONSECUTIVE_POLL_ERRORS = 3;
+const PENDING_TIMEOUT_MS = 60_000;
+const POLL_FAILURE_MESSAGE = "Scan failed or timed out.";
+
 export default function ScanResultPage() {
   const params = useParams();
   const scanId = params.id as string;
@@ -18,26 +22,54 @@ export default function ScanResultPage() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    let consecutivePollErrors = 0;
+    let pendingSince: number | null = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const stopPollingWithError = (message: string) => {
+      setStatus("error");
+      setStepText(message);
+      if (interval) clearInterval(interval);
+    };
+
     async function poll() {
       try {
         // First check status
         const statusRes = await fetch(`/api/scan/${scanId}/status`);
+        if (!statusRes.ok) {
+          throw new Error(`Status request failed with HTTP ${statusRes.status}`);
+        }
+
         const statusData = await statusRes.json();
+        consecutivePollErrors = 0;
+
+        if (statusData.status === "pending") {
+          if (pendingSince === null) {
+            pendingSince = Date.now();
+          } else if (Date.now() - pendingSince > PENDING_TIMEOUT_MS) {
+            stopPollingWithError(POLL_FAILURE_MESSAGE);
+            return;
+          }
+        } else {
+          pendingSince = null;
+        }
 
         if (statusData.status === "complete") {
           // Fetch full result
           const resultRes = await fetch(`/api/scan/${scanId}/result`);
+          if (!resultRes.ok) {
+            throw new Error(`Result request failed with HTTP ${resultRes.status}`);
+          }
+
           const resultData = await resultRes.json();
           setResult(resultData);
           setStatus("complete");
-          clearInterval(interval);
+          if (interval) clearInterval(interval);
           return;
         }
 
         if (statusData.status === "error") {
-          setStatus("error");
-          setStepText(statusData.error || "Scan failed");
-          clearInterval(interval);
+          stopPollingWithError(statusData.error || POLL_FAILURE_MESSAGE);
           return;
         }
 
@@ -46,13 +78,18 @@ export default function ScanResultPage() {
         setProgress(statusData.progress || 0);
         setStatus(statusData.status || "analyzing");
       } catch {
-        // keep polling
+        consecutivePollErrors += 1;
+        if (consecutivePollErrors >= MAX_CONSECUTIVE_POLL_ERRORS) {
+          stopPollingWithError(POLL_FAILURE_MESSAGE);
+        }
       }
     }
 
-    const interval = setInterval(poll, 1500);
+    interval = setInterval(poll, 1500);
     poll();
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [scanId]);
 
   return (

@@ -33,18 +33,18 @@ export default function PillarBreakdown({ pillars }: Props) {
 					const label = PILLAR_LABELS[key] || pillar.name;
 
 					return (
-						<div key={key} className="bg-bg border border-border p-7 md:p-8 min-h-[220px] flex flex-col justify-between">
-							<div>
-								<div className="font-mono text-[10px] text-muted mb-5 tracking-[0.08em] uppercase">
+						<div key={key} className="bg-bg border border-border p-[10px] min-h-[180px] flex flex-col items-center justify-center text-center gap-[10px]">
+							<div className="w-full flex flex-col items-center gap-[10px]">
+								<div className="font-mono text-[10px] text-muted tracking-[0.08em] uppercase">
 									{label}
 								</div>
-								<div className="font-serif text-[52px] leading-none mb-5" style={{ color }}>
+								<div className="font-serif text-[46px] leading-none" style={{ color }}>
 									{pillar.percentage}%
 								</div>
 							</div>
 
-							<div>
-								<div className="h-[3px] bg-white/[0.06] relative overflow-hidden mb-4">
+							<div className="w-full flex flex-col items-center gap-[10px]">
+								<div className="h-[3px] w-full bg-white/[0.06] relative overflow-hidden">
 									<div
 										className="h-full absolute left-0 top-0 transition-[width] duration-1000"
 										style={{
@@ -55,7 +55,7 @@ export default function PillarBreakdown({ pillars }: Props) {
 									/>
 								</div>
 
-								<div className="font-mono text-[10px] text-muted tracking-[0.06em]">
+								<div className="font-mono text-[10px] text-muted tracking-[0.06em] text-center">
 									{pillar.issues.length} {pillar.issues.length === 1 ? "issue" : "issues"} found
 								</div>
 							</div>
