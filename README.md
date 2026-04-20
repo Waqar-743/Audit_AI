@@ -114,4 +114,3 @@ src/
 - Worker requests should be protected with `SCAN_WORKER_SECRET` in production.
 - Redis is recommended for multi-instance deployments and result durability.
 
-Build boldly and lead the future of AI search, Waqar Ahmed.
