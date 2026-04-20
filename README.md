@@ -1,36 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AuditAI
 
-## Getting Started
+AuditAI is a Next.js 16 application that scans any public website and returns an AI-readiness report across four pillars:
 
-First, run the development server:
+- Schema Markup
+- Content Quality
+- Technical SEO
+- Trust Signals
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The system is designed around a queue-first workflow so scan requests return quickly while heavy analysis runs asynchronously.
+
+## Core Capabilities
+
+- Fast scan kickoff via `POST /api/scan`
+- Queue-backed worker processing through Upstash QStash
+- Incremental progress updates for crawl and analysis steps
+- Result polling endpoint for UI status and completion
+- Persistent scan state with Upstash Redis and in-memory fallback
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Zod for request validation
+- Upstash QStash (job queue)
+- Upstash Redis (scan state persistence)
+- Playwright + Cheerio (crawl and page parsing)
+- Google Generative AI SDK (content analysis)
+
+## Architecture Workflow
+
+```mermaid
+flowchart TD
+	A[User submits URL in UI] --> B[POST /api/scan]
+	B --> C[Validate and normalize URL]
+	C --> D[Create scan state as pending]
+	D --> E[Publish job to Upstash QStash]
+	E --> F[POST /api/webhooks/scan worker]
+	F --> G[runFullScan pipeline]
+	G --> G1[Crawl page]
+	G1 --> G2[Schema analyzer]
+	G2 --> G3[Content analyzer]
+	G3 --> G4[Technical SEO analyzer]
+	G4 --> G5[Trust signals analyzer]
+	G5 --> H[Compute weighted overall score]
+	H --> I[Persist complete result in scan store]
+	A --> J[GET /api/scan/:id/status polling]
+	J --> K{Complete?}
+	K -- No --> J
+	K -- Yes --> L[GET /api/scan/:id/result]
+	L --> M[Render report page]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Endpoints
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/scan` | Creates a scan, queues worker job, returns `scanId` |
+| `GET` | `/api/scan/:id/status` | Returns progress, step text, and current scan status |
+| `GET` | `/api/scan/:id/result` | Returns completed report payload (202 while pending) |
+| `POST` | `/api/webhooks/scan` | Worker endpoint triggered by QStash |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+Create a `.env.local` file and configure:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Queue
+QSTASH_TOKEN=
+QSTASH_URL=https://qstash.upstash.io
+SCAN_WORKER_WEBHOOK_URL=
+SCAN_WORKER_SECRET=
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# State store
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# AI analyzer
+GOOGLE_GENERATIVE_AI_API_KEY=
+```
 
-## Deploy on Vercel
+Notes:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `SCAN_WORKER_WEBHOOK_URL` is optional. If omitted, the app auto-resolves the current host.
+- In production, set `SCAN_WORKER_SECRET` and pass it to the worker through QStash forwarded headers.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build production bundle
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint checks
+
+## Project Structure
+
+```text
+src/
+	app/
+		api/
+			scan/                 # scan trigger + status/result endpoints
+			webhooks/scan/        # worker webhook endpoint
+		scan/[id]/              # scan progress and final report page
+	components/
+		landing/                # landing page sections
+		scan/                   # scan modal and input UI
+		results/                # report visualizations
+	lib/
+		scan-store.ts           # state persistence (Redis + memory fallback)
+		scanner/                # crawl + analyzers + scoring pipeline
+```
+
+## Production Notes
+
+- `POST /api/scan` is intentionally lightweight and only queues work.
+- Heavy processing runs in `/api/webhooks/scan` to avoid request timeout risk.
+- Worker requests should be protected with `SCAN_WORKER_SECRET` in production.
+- Redis is recommended for multi-instance deployments and result durability.
