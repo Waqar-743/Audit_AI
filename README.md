@@ -9,6 +9,10 @@ AuditAI is a Next.js 16 application that scans any public website and returns an
 
 The system is designed around a queue-first workflow so scan requests return quickly while heavy analysis runs asynchronously.
 
+[![CI](https://github.com/Waqar-743/Audit_AI/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Waqar-743/Audit_AI/actions/workflows/ci.yml)
+
+Workflow file: [`.github/workflows/ci.yml`](https://github.com/Waqar-743/Audit_AI/blob/master/.github/workflows/ci.yml)
+
 ## Core Capabilities
 
 - Fast scan kickoff via `POST /api/scan`
