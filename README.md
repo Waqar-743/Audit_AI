@@ -9,9 +9,7 @@ AuditAI is a Next.js 16 application that scans any public website and returns an
 
 The system is designed around a queue-first workflow so scan requests return quickly while heavy analysis runs asynchronously.
 
-[![CI](https://github.com/Waqar-743/Audit_AI/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Waqar-743/Audit_AI/actions/workflows/ci.yml)
-
-Workflow file: [`.github/workflows/ci.yml`](https://github.com/Waqar-743/Audit_AI/blob/master/.github/workflows/ci.yml)
+Live frontend: https://audit-ai-app.vercel.app
 
 ## Core Capabilities
 
@@ -34,25 +32,12 @@ Workflow file: [`.github/workflows/ci.yml`](https://github.com/Waqar-743/Audit_A
 ## Architecture Workflow
 
 ```mermaid
-flowchart TD
-	A[User submits URL in UI] --> B[POST /api/scan]
-	B --> C[Validate and normalize URL]
-	C --> D[Create scan state as pending]
-	D --> E[Publish job to Upstash QStash]
-	E --> F[POST /api/webhooks/scan worker]
-	F --> G[runFullScan pipeline]
-	G --> G1[Crawl page]
-	G1 --> G2[Schema analyzer]
-	G2 --> G3[Content analyzer]
-	G3 --> G4[Technical SEO analyzer]
-	G4 --> G5[Trust signals analyzer]
-	G5 --> H[Compute weighted overall score]
-	H --> I[Persist complete result in scan store]
-	A --> J[GET /api/scan/:id/status polling]
-	J --> K{Complete?}
-	K -- No --> J
-	K -- Yes --> L[GET /api/scan/:id/result]
-	L --> M[Render report page]
+flowchart LR
+	A[Frontend URL input] --> B[POST /api/scan]
+	B --> C[QStash queue]
+	C --> D[Worker /api/webhooks/scan]
+	D --> E[Redis scan state]
+	E --> F[Status and result polling UI]
 ```
 
 ## API Endpoints
@@ -128,3 +113,5 @@ src/
 - Heavy processing runs in `/api/webhooks/scan` to avoid request timeout risk.
 - Worker requests should be protected with `SCAN_WORKER_SECRET` in production.
 - Redis is recommended for multi-instance deployments and result durability.
+
+Build boldly and lead the future of AI search, Waqar Ahmed.
