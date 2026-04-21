@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import type { SchemaIssue } from "@/lib/scanner/types";
 
@@ -27,10 +26,7 @@ export default function IssueList({ issues }: Props) {
     return i.pillar === filter;
   });
 
-  // Show first 3 free, then one unlock prompt row
-  const FREE_LIMIT = 3;
-  const visibleIssues = filtered.slice(0, FREE_LIMIT);
-  const hiddenCount = Math.max(filtered.length - FREE_LIMIT, 0);
+  const visibleIssues = filtered;
 
   return (
     <section className="report-section-card report-issue-section w-full">
@@ -129,23 +125,6 @@ export default function IssueList({ issues }: Props) {
           )}
         </div>
       </div>
-
-      <Link
-        href="/#pricing"
-        className="mt-4 border border-border bg-bg2 px-6 py-5 md:px-7 md:py-6 flex items-center justify-between gap-4 hover:border-border-hover transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-8 w-8 md:h-9 md:w-9 items-center justify-center border border-border bg-bg3/30 font-mono text-[22px] text-accent leading-none">
-            +
-          </span>
-          <span className="font-mono text-[12px] tracking-[0.08em] uppercase text-text">
-            Click to see Full Report
-          </span>
-        </div>
-        <span className="font-mono text-[11px] text-muted tracking-[0.07em] uppercase">
-          {hiddenCount > 0 ? `${hiddenCount} more ${hiddenCount === 1 ? "issue" : "issues"}` : "All issues visible in this filter"}
-        </span>
-      </Link>
     </section>
   );
 }

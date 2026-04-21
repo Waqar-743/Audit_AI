@@ -14,7 +14,7 @@ type ContentAiAnalysis = {
   summary: string;
 };
 
-const GEMINI_TIMEOUT_MS = 15_000;
+const GEMINI_TIMEOUT_MS = 25_000;
 const FALLBACK_SUMMARY_MARKER = "neutral fallback metrics";
 
 const NEUTRAL_AI_ANALYSIS: Omit<ContentAiAnalysis, "summary"> = {
@@ -43,19 +43,28 @@ export async function analyzeContent(
 }> {
   const issues: SchemaIssue[] = [];
   let score = 0;
+  const extractionLimited =
+    crawl.extractionQuality === "low" ||
+    (crawl.wordCount === 0 &&
+      Boolean(crawl.title || crawl.metaDescription) &&
+      crawl.html.length > 3000);
 
   // ── Check 1: Heading structure ──
   const headingCount = crawl.headings.length;
   if (headingCount === 0) {
     issues.push({
       id: "content-no-headings",
-      severity: "critical",
+      severity: extractionLimited ? "warning" : "critical",
       pillar: "content",
       title: "No headings found",
       description:
         "Content without headings is difficult for AI engines to parse and cite.",
       fix: "Structure your content with H1-H6 headings for clear topic hierarchy.",
     });
+
+    if (extractionLimited) {
+      score += 6;
+    }
   } else if (headingCount < 3) {
     issues.push({
       id: "content-few-headings",
@@ -65,9 +74,24 @@ export async function analyzeContent(
       description:
         "More headings create clearer content structure for AI comprehension.",
     });
-    score += 5;
+    score += 8;
   } else {
     score += 15;
+  }
+
+  if (extractionLimited) {
+    issues.push({
+      id: "content-js-rendered-limited-extraction",
+      severity: "info",
+      pillar: "content",
+      title: "Limited server-side content extraction detected",
+      description:
+        "The page appears to rely heavily on client-side rendering, so some content signals may be undercounted.",
+      fix: "Expose key headings/content in initial HTML or add structured data for crawler visibility.",
+    });
+
+    // Prevent severe under-scoring when parser visibility is limited but metadata exists.
+    score += 14;
   }
 
   // ── Check 2: FAQ/Q&A content detection ──
@@ -78,8 +102,8 @@ export async function analyzeContent(
     crawl.headings.some((h) => h.text.includes("?"));
 
   if (hasQAPatterns) {
-    score += 15;
-  } else {
+    score += 12;
+  } else if (!extractionLimited) {
     issues.push({
       id: "content-no-faq",
       severity: "info",
@@ -94,10 +118,12 @@ export async function analyzeContent(
   // ── Check 3: Content length & depth ──
   if (crawl.wordCount >= 1500) {
     score += 15;
-  } else if (crawl.wordCount >= 800) {
-    score += 10;
-  } else if (crawl.wordCount >= 300) {
-    score += 5;
+  } else if (crawl.wordCount >= 900) {
+    score += 12;
+  } else if (crawl.wordCount >= 450) {
+    score += 9;
+  } else if (crawl.wordCount >= 200) {
+    score += 6;
     issues.push({
       id: "content-short",
       severity: "warning",
@@ -105,8 +131,25 @@ export async function analyzeContent(
       title: `Content may be too short (${crawl.wordCount} words)`,
       description:
         "Longer, in-depth content is more likely to be cited by AI engines.",
-      fix: "Expand your content to 800+ words with substantive information.",
+      fix: "Expand your content to 450+ words with substantive information.",
     });
+  } else {
+    issues.push({
+      id: "content-very-short",
+      severity: extractionLimited ? "info" : "warning",
+      pillar: "content",
+      title: `Very short content (${crawl.wordCount} words)`,
+      description: extractionLimited
+        ? "Visible server-side text extraction was very limited, so content signals may be undercounted."
+        : "Extremely short pages are hard for AI systems to cite confidently.",
+      fix: extractionLimited
+        ? "Expose key content in initial HTML or enrich structured data for crawler visibility."
+        : "Add clearer explanations, examples, and supporting details.",
+    });
+
+    if (extractionLimited) {
+      score += 4;
+    }
   }
 
   // ── Check 4: Author attribution ──
@@ -123,7 +166,7 @@ export async function analyzeContent(
 
   if (hasAuthor) {
     score += 10;
-  } else {
+  } else if (!extractionLimited) {
     issues.push({
       id: "content-no-author",
       severity: "warning",
@@ -150,7 +193,7 @@ export async function analyzeContent(
 
   if (hasDate) {
     score += 10;
-  } else {
+  } else if (!extractionLimited) {
     issues.push({
       id: "content-no-date",
       severity: "warning",
@@ -168,7 +211,7 @@ export async function analyzeContent(
     score += 10;
   } else if (listCount >= 1) {
     score += 5;
-  } else {
+  } else if (!extractionLimited) {
     issues.push({
       id: "content-no-lists",
       severity: "info",
@@ -185,7 +228,7 @@ export async function analyzeContent(
     score += 10;
   } else if (externalLinks >= 1) {
     score += 5;
-  } else {
+  } else if (!extractionLimited) {
     issues.push({
       id: "content-no-citations",
       severity: "info",
@@ -203,20 +246,38 @@ export async function analyzeContent(
     score += 5;
   }
 
+  if (extractionLimited) {
+    // Neutral buffer so sparse extraction does not produce repeated false-negative penalties.
+    score += 8;
+  }
+
   // ── Gemini Analysis (optional) ──
   let aiAnalysis;
   const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && crawl.textContent.length > 100) {
+  if (apiKey && (crawl.textContent.length > 100 || extractionLimited)) {
     try {
-      aiAnalysis = await runAiAnalysis(crawl.textContent, apiKey);
+      aiAnalysis = await runAiAnalysis(buildAiInput(crawl), apiKey);
       if (aiAnalysis && !isFallbackAiAnalysis(aiAnalysis)) {
-        // Boost score based on AI analysis
-        score += Math.round(
+        const aiComposite =
           (aiAnalysis.readabilityScore +
             aiAnalysis.factualDensity +
-            aiAnalysis.answerFocused) /
-            3
-        );
+            aiAnalysis.answerFocused +
+            aiAnalysis.authorAttribution) /
+          4;
+
+        // AI-assisted bonus is intentionally meaningful but bounded.
+        score += Math.round(aiComposite * 1.6);
+
+        if (aiComposite < 5) {
+          issues.push({
+            id: "content-ai-low-quality",
+            severity: "warning",
+            pillar: "content",
+            title: "AI review flagged weak content clarity",
+            description: aiAnalysis.summary,
+            fix: "Improve direct answers, factual density, and clear author credentials.",
+          });
+        }
       }
     } catch (error) {
       console.warn("[content-analyzer] Gemini analysis crashed unexpectedly", error);
@@ -232,11 +293,11 @@ export async function analyzeContent(
 }
 
 async function runAiAnalysis(
-  textContent: string,
+  analysisInput: string,
   apiKey: string
 ): Promise<ContentAiAnalysis> {
   // Keep prompt bounded for stable latency while still allowing deep analysis.
-  const content = textContent.slice(0, 12000);
+  const content = analysisInput.slice(0, 18000);
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelName = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
@@ -270,7 +331,7 @@ ${content}`;
         generationConfig: {
           responseMimeType: "application/json",
           temperature: 0.2,
-          maxOutputTokens: 400,
+          maxOutputTokens: 700,
         },
       }),
       GEMINI_TIMEOUT_MS,
@@ -314,6 +375,33 @@ ${content}`;
       error instanceof Error ? error.message : "request-failed"
     );
   }
+}
+
+function buildAiInput(crawl: CrawlResult): string {
+  if (crawl.textContent.length > 120) {
+    return crawl.textContent;
+  }
+
+  const headingSnapshot = crawl.headings
+    .slice(0, 15)
+    .map((heading) => `H${heading.level}: ${heading.text}`)
+    .join("\n");
+
+  const schemaSnapshot = JSON.stringify(crawl.jsonLdBlocks.slice(0, 5)).slice(0, 4000);
+
+  return [
+    `URL: ${crawl.url}`,
+    `Title: ${crawl.title || "N/A"}`,
+    `Meta Description: ${crawl.metaDescription || "N/A"}`,
+    `Extraction Mode: ${crawl.renderMode || "static"}`,
+    `Extraction Quality: ${crawl.extractionQuality || "unknown"}`,
+    `Word Count: ${crawl.wordCount}`,
+    `Heading Count: ${crawl.headings.length}`,
+    `External Link Count: ${crawl.links.filter((link) => link.isExternal).length}`,
+    `Headings:\n${headingSnapshot || "N/A"}`,
+    `JSON-LD:\n${schemaSnapshot || "N/A"}`,
+    `HTML Snippet:\n${crawl.html.slice(0, 5000)}`,
+  ].join("\n\n");
 }
 
 function parseModelJson(raw: string): unknown | null {

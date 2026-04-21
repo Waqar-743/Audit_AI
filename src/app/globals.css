@@ -1238,9 +1238,10 @@ footer {
 .report-center-stage {
   min-height: calc(100dvh - 60px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: clamp(20px, 4vw, 48px);
+  padding-top: clamp(28px, 5vh, 76px);
 }
 
 .report-scan-card {

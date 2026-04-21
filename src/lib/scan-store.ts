@@ -68,26 +68,77 @@ export async function updateScan(id: string, update: Partial<ScanStatus>): Promi
 
 export async function getScan(id: string): Promise<ScanStatus | undefined> {
   const cached = scans.get(id);
-  if (cached) {
+  const redis = getRedisClient();
+
+  if (cached && (!redis || isTerminalStatus(cached.status))) {
     return cached;
   }
 
-  const redis = getRedisClient();
   if (!redis) {
-    return undefined;
+    return cached;
   }
 
   try {
     const stored = await redis.get<ScanStatus>(scanKey(id));
     if (stored && typeof stored === "object") {
-      scans.set(id, stored);
-      return stored;
+      if (!cached || isStoredStateNewer(cached, stored)) {
+        scans.set(id, stored);
+        return stored;
+      }
+
+      return cached;
     }
   } catch {
     // Keep API functional even if Redis is unavailable.
   }
 
-  return undefined;
+  return cached;
+}
+
+function isTerminalStatus(status: ScanStatus["status"]): boolean {
+  return status === "complete" || status === "error";
+}
+
+function statusRank(status: ScanStatus["status"]): number {
+  switch (status) {
+    case "pending":
+      return 0;
+    case "crawling":
+      return 1;
+    case "analyzing":
+      return 2;
+    case "complete":
+      return 3;
+    case "error":
+      return 4;
+    default:
+      return 0;
+  }
+}
+
+function isStoredStateNewer(cached: ScanStatus, stored: ScanStatus): boolean {
+  const cachedRank = statusRank(cached.status);
+  const storedRank = statusRank(stored.status);
+
+  if (storedRank !== cachedRank) {
+    return storedRank > cachedRank;
+  }
+
+  if (stored.progress !== cached.progress) {
+    return stored.progress > cached.progress;
+  }
+
+  if (stored.step !== cached.step) {
+    return stored.step > cached.step;
+  }
+
+  const hasStoredResult = Boolean(stored.result);
+  const hasCachedResult = Boolean(cached.result);
+  if (hasStoredResult !== hasCachedResult) {
+    return hasStoredResult;
+  }
+
+  return false;
 }
 
 export async function completeScan(id: string, result: ScanResult): Promise<void> {

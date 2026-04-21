@@ -246,8 +246,8 @@ function ResultsView({ result }: { result: ScanResult }) {
           <p className="section-sub report-upsell-subline mb-7 mx-auto">
             Get detailed fix instructions, copy-paste schema code, priority roadmap, and a downloadable PDF report.
           </p>
-          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-4 max-w-[660px] mx-auto">
-            <Link href="/#pricing" className="price-btn primary flex-1" style={{ maxWidth: "320px", marginInline: "auto", paddingBlock: "12px" }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mx-auto">
+            <Link href="/#pricing" className="price-btn primary w-full sm:w-[320px]" style={{ maxWidth: "320px", marginInline: "auto", paddingBlock: "12px" }}>
               <span className="block font-mono text-[10px] tracking-[0.08em] leading-none mb-2">0 for now</span>
               <span className="inline-flex items-center justify-center gap-2">
                 <span>Get full audit</span>
@@ -255,7 +255,7 @@ function ResultsView({ result }: { result: ScanResult }) {
               </span>
             </Link>
 
-            <Link href="/#pricing" className="price-btn flex-1" style={{ maxWidth: "320px", marginInline: "auto" }}>
+            <Link href="/#pricing" className="price-btn w-full sm:w-[320px]" style={{ maxWidth: "320px", marginInline: "auto" }}>
               Download PDF report
             </Link>
           </div>

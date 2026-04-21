@@ -1,5 +1,15 @@
 import type { CrawlResult, SchemaIssue } from "./types";
 
+type PageSpeedMetrics = {
+  performance: number;
+  seo: number;
+  lcp: string;
+  fcp: string;
+  cls: string;
+  tti: string;
+  speedIndex: string;
+};
+
 /**
  * Run technical SEO checks on the crawled page.
  * Optionally calls Google PageSpeed Insights API if API key is available.
@@ -9,17 +19,32 @@ export async function analyzeTechnicalSeo(
 ): Promise<{
   score: number;
   issues: SchemaIssue[];
-  pageSpeed?: {
-    performance: number;
-    lcp: string;
-    fcp: string;
-    cls: string;
-    tti: string;
-    speedIndex: string;
-  };
+  pageSpeed?: PageSpeedMetrics;
 }> {
   const issues: SchemaIssue[] = [];
   let score = 0;
+  const limitedExtraction =
+    crawl.extractionQuality === "low" ||
+    (crawl.wordCount === 0 &&
+      Boolean(crawl.title || crawl.metaDescription) &&
+      crawl.html.length > 3000);
+
+  if (crawl.statusCode >= 400) {
+    issues.push({
+      id: "tech-crawl-http-error",
+      severity: "critical",
+      pillar: "technical",
+      title: `Page returned HTTP ${crawl.statusCode}`,
+      description:
+        "The crawler could not access a valid page response, so technical SEO checks are incomplete.",
+      fix: "Verify the URL is public and does not block server-side requests.",
+    });
+
+    return {
+      score: 0,
+      issues,
+    };
+  }
 
   // ── Check 1: HTTPS ──
   if (crawl.hasHttps) {
@@ -37,10 +62,10 @@ export async function analyzeTechnicalSeo(
   }
 
   // ── Check 2: Response time ──
-  if (crawl.responseTime < 1000) {
+  if (crawl.responseTime < 1500) {
     score += 10;
-  } else if (crawl.responseTime < 3000) {
-    score += 5;
+  } else if (crawl.responseTime < 3500) {
+    score += 7;
     issues.push({
       id: "tech-slow-response",
       severity: "warning",
@@ -48,7 +73,7 @@ export async function analyzeTechnicalSeo(
       title: `Slow response time (${(crawl.responseTime / 1000).toFixed(1)}s)`,
       description:
         "AI crawlers have timeouts. Slow responses risk incomplete content extraction.",
-      fix: "Optimize server response time. Target under 1 second.",
+      fix: "Optimize server response time. Target under 1.5 seconds.",
     });
   } else {
     issues.push({
@@ -87,7 +112,7 @@ export async function analyzeTechnicalSeo(
   } else {
     issues.push({
       id: "tech-no-meta-desc",
-      severity: "critical",
+      severity: limitedExtraction ? "warning" : "critical",
       pillar: "technical",
       title: "No meta description found",
       description:
@@ -112,7 +137,7 @@ export async function analyzeTechnicalSeo(
   } else {
     issues.push({
       id: "tech-no-title",
-      severity: "critical",
+      severity: limitedExtraction ? "warning" : "critical",
       pillar: "technical",
       title: "No title tag found",
       description: "The page is missing a title tag. This is critical for all search engines.",
@@ -152,16 +177,21 @@ export async function analyzeTechnicalSeo(
 
   // ── Check 7: Heading hierarchy ──
   const h1Count = crawl.headings.filter((h) => h.level === 1).length;
+
   if (h1Count === 0) {
     issues.push({
       id: "tech-no-h1",
-      severity: "critical",
+      severity: limitedExtraction ? "warning" : "critical",
       pillar: "technical",
       title: "No H1 heading found",
       description:
         "Every page should have exactly one H1 heading for AI engines to identify the main topic.",
       fix: "Add a single H1 heading that describes the page's main topic.",
     });
+
+    if (limitedExtraction) {
+      score += 3;
+    }
   } else if (h1Count === 1) {
     score += 10;
   } else {
@@ -202,7 +232,9 @@ export async function analyzeTechnicalSeo(
 
   // ── Check 8: Images without alt text ──
   const imagesWithoutAlt = crawl.images.filter((img) => !img.alt);
-  if (imagesWithoutAlt.length > 0) {
+  if (crawl.images.length === 0) {
+    score += 4;
+  } else if (imagesWithoutAlt.length > 0) {
     issues.push({
       id: "tech-images-no-alt",
       severity: "warning",
@@ -238,44 +270,67 @@ export async function analyzeTechnicalSeo(
   }
 
   // ── Check 10: Word count ──
-  if (crawl.wordCount < 300) {
+  if (crawl.wordCount < 250) {
     issues.push({
       id: "tech-thin-content",
       severity: "warning",
       pillar: "technical",
       title: `Thin content (${crawl.wordCount} words)`,
       description:
-        "Pages with fewer than 300 words are unlikely to be cited by AI engines.",
-      fix: "Add more substantive, relevant content. Aim for 800+ words for articles.",
+        "Very short pages are less likely to be cited by AI engines.",
+      fix: "Add more substantive, relevant content. Aim for at least 400+ words where possible.",
     });
+  } else if (crawl.wordCount < 500) {
+    score += 6;
   } else {
     score += 10;
   }
 
   // ── PageSpeed Insights API (optional) ──
-  let pageSpeed;
+  let pageSpeed: PageSpeedMetrics | null = null;
   const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
   if (apiKey) {
     try {
       pageSpeed = await fetchPageSpeed(crawl.url, apiKey);
       if (pageSpeed) {
-        if (pageSpeed.performance >= 90) score += 15;
-        else if (pageSpeed.performance >= 50) {
-          score += 8;
+        const isSeoSignalLikelyUnreliable =
+          pageSpeed.seo <= 1 && pageSpeed.performance >= 50;
+
+        const blendedScore = isSeoSignalLikelyUnreliable
+          ? Math.round(pageSpeed.performance * 0.85 + 15)
+          : Math.round(pageSpeed.performance * 0.55 + pageSpeed.seo * 0.45);
+
+        if (isSeoSignalLikelyUnreliable) {
+          issues.push({
+            id: "tech-pagespeed-seo-unreliable",
+            severity: "info",
+            pillar: "technical",
+            title: "Lighthouse SEO subscore appears unreliable for this page",
+            description:
+              "PageSpeed returned SEO 0/100 while performance is healthy, which can happen on heavily scripted pages or partial renders.",
+            fix: "Treat this as directional data and verify with Search Console plus rendered-page checks.",
+          });
+        }
+
+        if (blendedScore >= 85) {
+          score += 18;
+        } else if (blendedScore >= 60) {
+          score += 12;
           issues.push({
             id: "tech-moderate-speed",
             severity: "warning",
             pillar: "technical",
-            title: `Moderate performance score (${pageSpeed.performance}/100)`,
-            description: `LCP: ${pageSpeed.lcp}, FCP: ${pageSpeed.fcp}. Optimize for faster loading.`,
+            title: `Moderate Lighthouse technical score (${blendedScore}/100)`,
+            description: `Performance ${pageSpeed.performance}/100, SEO ${pageSpeed.seo}/100. LCP: ${pageSpeed.lcp}, FCP: ${pageSpeed.fcp}.`,
           });
         } else {
+          score += 6;
           issues.push({
             id: "tech-poor-speed",
             severity: "critical",
             pillar: "technical",
-            title: `Poor performance score (${pageSpeed.performance}/100)`,
-            description: `LCP: ${pageSpeed.lcp}, FCP: ${pageSpeed.fcp}. Slow sites get deprioritized.`,
+            title: `Poor Lighthouse technical score (${blendedScore}/100)`,
+            description: `Performance ${pageSpeed.performance}/100, SEO ${pageSpeed.seo}/100. LCP: ${pageSpeed.lcp}, FCP: ${pageSpeed.fcp}.`,
             fix: "Optimize images, enable compression, minimize JavaScript, and use a CDN.",
           });
         }
@@ -285,11 +340,13 @@ export async function analyzeTechnicalSeo(
     }
   } else {
     // No API key — give partial credit based on response time
-    if (crawl.responseTime < 2000) score += 10;
+    if (crawl.responseTime < 2000) score += 9;
+    else if (crawl.responseTime < 3500) score += 6;
+    else score += 3;
   }
 
   return {
-    score: Math.min(Math.round((score / 100) * 100), 100),
+    score: clampToPercentage(score),
     issues,
     pageSpeed: pageSpeed ?? undefined,
   };
@@ -298,14 +355,7 @@ export async function analyzeTechnicalSeo(
 async function fetchPageSpeed(
   url: string,
   apiKey: string
-): Promise<{
-  performance: number;
-  lcp: string;
-  fcp: string;
-  cls: string;
-  tti: string;
-  speedIndex: string;
-} | null> {
+): Promise<PageSpeedMetrics | null> {
   const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&key=${apiKey}`;
 
   const res = await fetch(endpoint, { signal: AbortSignal.timeout(30000) });
@@ -319,10 +369,15 @@ async function fetchPageSpeed(
 
   return {
     performance: Math.round((categories.performance?.score || 0) * 100),
+    seo: Math.round((categories.seo?.score || 0) * 100),
     lcp: audits["largest-contentful-paint"]?.displayValue || "N/A",
     fcp: audits["first-contentful-paint"]?.displayValue || "N/A",
     cls: audits["cumulative-layout-shift"]?.displayValue || "N/A",
     tti: audits["interactive"]?.displayValue || "N/A",
     speedIndex: audits["speed-index"]?.displayValue || "N/A",
   };
+}
+
+function clampToPercentage(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
 }

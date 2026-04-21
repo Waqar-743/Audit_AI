@@ -4,6 +4,9 @@ export interface CrawlResult {
   url: string;
   finalUrl: string;
   html: string;
+  renderMode?: "static" | "dynamic";
+  extractionQuality?: "low" | "medium" | "high";
+  extractionNotes?: string[];
   title: string;
   metaDescription: string;
   metaRobots: string;
@@ -45,6 +48,7 @@ export interface ScanResult {
   url: string;
   timestamp: string;
   overallScore: number;
+  analysisConfidence?: number;
   pillars: {
     schema: PillarScore;
     content: PillarScore;
@@ -54,6 +58,7 @@ export interface ScanResult {
   issues: SchemaIssue[];
   pageSpeed?: {
     performance: number;
+    seo: number;
     lcp: string;
     fcp: string;
     cls: string;
