@@ -1130,9 +1130,10 @@ footer {
   background: rgba(8,8,8,0.92);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: clamp(16px, 3vw, 32px);
+  padding-top: clamp(68px, 10vh, 120px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
@@ -1241,7 +1242,7 @@ footer {
   align-items: flex-start;
   justify-content: center;
   padding: clamp(20px, 4vw, 48px);
-  padding-top: clamp(28px, 5vh, 76px);
+  padding-top: clamp(12px, 2.5vh, 28px);
 }
 
 .report-scan-card {
