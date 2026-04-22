@@ -9,7 +9,6 @@ AuditAI is a Next.js 16 application that scans any public website and returns an
 
 The system is designed around a queue-first workflow so scan requests return quickly while heavy analysis runs asynchronously.
 
-Live frontend: https://audit-ai-app.vercel.app
 
 ## Core Capabilities
 
