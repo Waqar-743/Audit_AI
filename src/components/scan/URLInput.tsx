@@ -53,31 +53,34 @@ export default function URLInput({ variant = "hero" }: { variant?: "hero" | "cta
     <>
       <div
         id={isHero ? "hero-input" : "cta-input"}
-          className="relative z-20 flex w-full gap-0 overflow-hidden rounded-xl glass-panel transition-all duration-300 focus-within:-translate-y-1 focus-within:border-accent/50 focus-within:shadow-[0_0_30px_rgba(168,255,87,0.15)]"
+        className="relative z-20 flex flex-col sm:flex-row w-full gap-2 sm:gap-0 sm:overflow-hidden rounded-xl transition-all duration-300"
         style={{ padding: "4px" }}
       >
-        {isHero && (
-          <span className="font-mono text-sm text-muted px-5 flex items-center bg-black/40 rounded-l-lg border-r border-white/5 whitespace-nowrap">
-            https://
-          </span>
-        )}
-        <input
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="yourwebsite.com"
-          autoComplete="off"
-          spellCheck={false}
-          onKeyDown={(e) => e.key === "Enter" && handleScan()}
-          className="flex-1 bg-black/20 border-none outline-none text-text font-mono text-[15px] px-6 py-5 placeholder:text-muted/50 min-w-0 focus:bg-black/40 transition-colors"
-          style={!isHero ? { borderRadius: "8px 0 0 8px" } : {}}
-        />
+        {/* Input row */}
+        <div className="flex flex-1 overflow-hidden rounded-xl sm:rounded-r-none glass-panel focus-within:-translate-y-0.5 focus-within:border-accent/50 focus-within:shadow-[0_0_30px_rgba(168,255,87,0.15)] transition-all duration-300">
+          {isHero && (
+            <span className="font-mono text-sm text-muted px-4 sm:px-5 flex items-center bg-black/40 border-r border-white/5 whitespace-nowrap shrink-0">
+              https://
+            </span>
+          )}
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="yourwebsite.com"
+            autoComplete="off"
+            spellCheck={false}
+            onKeyDown={(e) => e.key === "Enter" && handleScan()}
+            className="flex-1 bg-black/20 border-none outline-none text-text font-mono text-[14px] sm:text-[15px] px-4 sm:px-6 py-4 sm:py-5 placeholder:text-muted/50 min-w-0 focus:bg-black/40 transition-colors"
+          />
+        </div>
+        {/* Button */}
         <button
           onClick={handleScan}
           disabled={!hasUrl || scanning}
-          className="antigravity-btn whitespace-nowrap rounded-lg px-10 py-5 font-mono text-[15px] font-semibold tracking-[0.04em] cursor-pointer active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+          className="antigravity-btn whitespace-nowrap rounded-xl sm:rounded-l-none sm:rounded-r-xl px-6 sm:px-10 py-4 sm:py-5 font-mono text-[14px] sm:text-[15px] font-semibold tracking-[0.04em] cursor-pointer active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 w-full sm:w-auto"
         >
-          {scanning ? "Scanning..." : "Analyze site"}
+          {scanning ? "Scanning..." : "Analyze site →"}
         </button>
       </div>
 

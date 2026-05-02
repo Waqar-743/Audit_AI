@@ -91,6 +91,27 @@ jobs:
         if: steps.verify-vercel-secrets.outputs.ready == 'true'
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
+      - name: Inject backend environment variables into Vercel
+        if: steps.verify-vercel-secrets.outputs.ready == 'true'
+        run: |
+          inject_env() {
+            local key="$1"
+            local value="$2"
+            if [ -n "$value" ]; then
+              echo "$value" | vercel env add "$key" production --token=${{ secrets.VERCEL_TOKEN }} --force 2>/dev/null || true
+              echo "  Injected $key" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+          inject_env SCAN_WORKER_WEBHOOK_URL "${{ secrets.SCAN_WORKER_WEBHOOK_URL }}"
+          inject_env SCAN_WORKER_SECRET      "${{ secrets.SCAN_WORKER_SECRET }}"
+          inject_env QSTASH_TOKEN            "${{ secrets.QSTASH_TOKEN }}"
+          inject_env QSTASH_URL              "${{ secrets.QSTASH_URL }}"
+          inject_env GEMINI_API_KEY          "${{ secrets.GEMINI_API_KEY }}"
+          inject_env GEMINI_MODEL            "${{ secrets.GEMINI_MODEL }}"
+          inject_env UPSTASH_REDIS_REST_URL  "${{ secrets.UPSTASH_REDIS_REST_URL }}"
+          inject_env UPSTASH_REDIS_REST_TOKEN "${{ secrets.UPSTASH_REDIS_REST_TOKEN }}"
+          inject_env GOOGLE_PAGESPEED_API_KEY "${{ secrets.GOOGLE_PAGESPEED_API_KEY }}"
+
       - name: Build project artifacts
         if: steps.verify-vercel-secrets.outputs.ready == 'true'
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
