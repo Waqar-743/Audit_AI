@@ -8,6 +8,7 @@ export default function URLInput({ variant = "hero" }: { variant?: "hero" | "cta
   const [url, setUrl] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanId, setScanId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const normalizedUrl = url.trim().replace(/^https?:\/\//, "");
   const hasUrl = normalizedUrl.length > 0;
@@ -17,6 +18,7 @@ export default function URLInput({ variant = "hero" }: { variant?: "hero" | "cta
 
     const cleanUrl = normalizedUrl;
     setScanId(null);
+    setError(null);
     setScanning(true);
 
     try {
@@ -26,17 +28,21 @@ export default function URLInput({ variant = "hero" }: { variant?: "hero" | "cta
         body: JSON.stringify({ url: cleanUrl }),
       });
       const data = await res.json();
-      if (data.scanId) {
+      if (res.ok && data.scanId) {
         setScanId(data.scanId);
+      } else {
+        setScanning(false);
+        setError(data.error || "Failed to start scan. Please try again.");
       }
     } catch {
-      setScanId("demo");
+      setScanning(false);
+      setError("Network error. Please try again.");
     }
   };
 
   const handleScanComplete = () => {
     setScanning(false);
-    if (scanId) {
+    if (scanId && scanId !== "demo") {
       router.push(`/scan/${scanId}`);
     }
   };
@@ -75,7 +81,11 @@ export default function URLInput({ variant = "hero" }: { variant?: "hero" | "cta
         </button>
       </div>
 
-      {scanning && (
+      {error && (
+        <p className="font-mono text-[12px] text-red-400 mt-2 px-1">{error}</p>
+      )}
+
+      {scanning && scanId !== null && (
         <ScanModal
           url={url.trim().replace(/^https?:\/\//, "") || "yoursite.com"}
           scanId={scanId}

@@ -153,10 +153,15 @@ export async function analyzeContent(
   }
 
   // ── Check 4: Author attribution ──
+  const htmlLowerContent = crawl.html.toLowerCase();
   const hasAuthor =
     textLower.includes("written by") ||
-    textLower.includes("author") ||
-    textLower.includes("by ") ||
+    textLower.includes("posted by") ||
+    textLower.includes("authored by") ||
+    /\bauthor[:\s]/i.test(crawl.textContent) ||
+    htmlLowerContent.includes('rel="author"') ||
+    htmlLowerContent.includes("class=\"author\"") ||
+    htmlLowerContent.includes("itemprop=\"author\"") ||
     crawl.jsonLdBlocks.some(
       (block) =>
         typeof block === "object" &&
@@ -179,10 +184,11 @@ export async function analyzeContent(
   }
 
   // ── Check 5: Date stamps ──
+  const MONTH_NAMES = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec";
   const hasDate =
-    crawl.html.match(
-      /\b(20[0-9]{2}[-\/][0-1]?[0-9][-\/][0-3]?[0-9])\b/
-    ) !== null ||
+    /\b20[0-9]{2}[-\/][0-1]?[0-9][-\/][0-3]?[0-9]\b/.test(crawl.html) ||
+    new RegExp(`\\b(${MONTH_NAMES})\\s+\\d{1,2},?\\s+20\\d{2}\\b`, "i").test(crawl.html) ||
+    new RegExp(`\\b\\d{1,2}\\s+(${MONTH_NAMES})\\s+20\\d{2}\\b`, "i").test(crawl.html) ||
     crawl.jsonLdBlocks.some(
       (block) =>
         typeof block === "object" &&

@@ -58,14 +58,27 @@ async function enqueueScanJob(
 ): Promise<void> {
   const validated = qstashPayloadSchema.parse(payload);
   const qstashToken = process.env.QSTASH_TOKEN?.trim();
+  const workerWebhookUrl = resolveWorkerWebhookUrl(req);
+  const workerSecret = process.env.SCAN_WORKER_SECRET?.trim();
 
   if (!qstashToken) {
-    throw new Error("QSTASH_TOKEN is not configured");
+    // No QStash configured — invoke the worker webhook directly in the background.
+    // This path is used in local development and self-hosted deployments without a queue.
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (workerSecret) {
+      headers["x-scan-worker-secret"] = workerSecret;
+    }
+    fetch(workerWebhookUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(validated),
+    }).catch(() => {
+      // Worker errors surface via the scan status API; no action needed here.
+    });
+    return;
   }
 
-  const workerWebhookUrl = resolveWorkerWebhookUrl(req);
   const qstashBaseUrl = process.env.QSTASH_URL?.trim() || "https://qstash.upstash.io";
-  const workerSecret = process.env.SCAN_WORKER_SECRET?.trim();
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${qstashToken}`,
