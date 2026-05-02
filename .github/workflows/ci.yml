@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -53,30 +53,33 @@ jobs:
         run: |
           missing=0
           if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "Missing VERCEL_TOKEN" >> "$GITHUB_STEP_SUMMARY"
+            echo "❌ Missing secret: VERCEL_TOKEN" >> "$GITHUB_STEP_SUMMARY"
             missing=1
           fi
           if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
-            echo "Missing VERCEL_ORG_ID" >> "$GITHUB_STEP_SUMMARY"
+            echo "❌ Missing secret: VERCEL_ORG_ID" >> "$GITHUB_STEP_SUMMARY"
             missing=1
           fi
           if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "Missing VERCEL_PROJECT_ID" >> "$GITHUB_STEP_SUMMARY"
+            echo "❌ Missing secret: VERCEL_PROJECT_ID" >> "$GITHUB_STEP_SUMMARY"
             missing=1
           fi
 
           if [ "$missing" -eq 1 ]; then
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "Live deploy skipped: configure missing Vercel secrets in repository settings." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "⚠️ Vercel deploy skipped. Add the missing secrets at:" >> "$GITHUB_STEP_SUMMARY"
+            echo "https://github.com/Waqar-743/Audit_AI/settings/secrets/actions" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "✅ All Vercel secrets present." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Setup Node.js
         if: steps.verify-vercel-secrets.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -99,18 +102,21 @@ jobs:
             local value="$2"
             if [ -n "$value" ]; then
               echo "$value" | vercel env add "$key" production --token=${{ secrets.VERCEL_TOKEN }} --force 2>/dev/null || true
-              echo "  Injected $key" >> "$GITHUB_STEP_SUMMARY"
+              echo "  ✅ Injected $key" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "  ⏭️ Skipped $key (not set)" >> "$GITHUB_STEP_SUMMARY"
             fi
           }
-          inject_env SCAN_WORKER_WEBHOOK_URL "${{ secrets.SCAN_WORKER_WEBHOOK_URL }}"
-          inject_env SCAN_WORKER_SECRET      "${{ secrets.SCAN_WORKER_SECRET }}"
-          inject_env QSTASH_TOKEN            "${{ secrets.QSTASH_TOKEN }}"
-          inject_env QSTASH_URL              "${{ secrets.QSTASH_URL }}"
-          inject_env GEMINI_API_KEY          "${{ secrets.GEMINI_API_KEY }}"
-          inject_env GEMINI_MODEL            "${{ secrets.GEMINI_MODEL }}"
-          inject_env UPSTASH_REDIS_REST_URL  "${{ secrets.UPSTASH_REDIS_REST_URL }}"
-          inject_env UPSTASH_REDIS_REST_TOKEN "${{ secrets.UPSTASH_REDIS_REST_TOKEN }}"
-          inject_env GOOGLE_PAGESPEED_API_KEY "${{ secrets.GOOGLE_PAGESPEED_API_KEY }}"
+          echo "### Environment Variables Injected" >> "$GITHUB_STEP_SUMMARY"
+          inject_env SCAN_WORKER_WEBHOOK_URL   "${{ secrets.SCAN_WORKER_WEBHOOK_URL }}"
+          inject_env SCAN_WORKER_SECRET        "${{ secrets.SCAN_WORKER_SECRET }}"
+          inject_env QSTASH_TOKEN              "${{ secrets.QSTASH_TOKEN }}"
+          inject_env QSTASH_URL                "${{ secrets.QSTASH_URL }}"
+          inject_env GEMINI_API_KEY            "${{ secrets.GEMINI_API_KEY }}"
+          inject_env GEMINI_MODEL              "${{ secrets.GEMINI_MODEL }}"
+          inject_env UPSTASH_REDIS_REST_URL    "${{ secrets.UPSTASH_REDIS_REST_URL }}"
+          inject_env UPSTASH_REDIS_REST_TOKEN  "${{ secrets.UPSTASH_REDIS_REST_TOKEN }}"
+          inject_env GOOGLE_PAGESPEED_API_KEY  "${{ secrets.GOOGLE_PAGESPEED_API_KEY }}"
 
       - name: Build project artifacts
         if: steps.verify-vercel-secrets.outputs.ready == 'true'
@@ -122,10 +128,6 @@ jobs:
         run: |
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
           echo "deployment_url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
-          echo "Live deployment: $DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Show deployment URL
-        if: steps.verify-vercel-secrets.outputs.ready == 'true'
-        run: |
-          echo "Deployment URL: ${{ steps.vercel-deploy.outputs.deployment_url }}"
-          echo "Production URL: https://audit-ai-app.vercel.app" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 🚀 Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live URL: $DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production: https://audit-ai-app.vercel.app" >> "$GITHUB_STEP_SUMMARY"
