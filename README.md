@@ -1,5 +1,49 @@
 # AuditAI
 
+## Pip: the free SEO assistant and Chrome extension
+
+Pip lives alongside the original website at `/assistant`. No signup, payment, external AI service, or provider keys are required. It shares deterministic, evidence-based audit rules with the local Chrome extension and uses the website's existing charcoal, warm-white, and lime colors.
+
+```bash
+npm ci
+npm run dev
+```
+
+Open `http://localhost:3000/assistant`. The development and production build commands also generate the extension download. The original landing page, URL scanner, and scan reports remain available; paid-tier messaging now points to the free assistant.
+
+- **Page audit:** indexing instructions, titles and descriptions, canonicals, headings, image alternatives, link names, and JSON-LD syntax, with evidence and reference links.
+- **Workbench:** edit a title and description, preview a possible snippet, and copy escaped metadata or a generic WebPage JSON-LD draft. No changes are automatically published.
+- **Field notes:** optional personalization, 15 original bird illustrations, and the latest 20 reports saved in this browser, with export and delete controls.
+- **Local coach:** asks and answers from observed findings through deterministic topic matching. It does not call an AI provider or fabricate ranking data.
+- **Chrome extension:** reads the rendered DOM locally after an explicit audit action. Includes temporary element highlights and makes no network requests.
+
+The website URL audit reads initial public HTML with bounded, DNS-pinned HTTP requests and redirect validation. It does not execute target JavaScript. The extension reads the current rendered page. Each report states its extraction mode and limitations. The checklist score counts passed pass/fail checks and excludes reviews and untested areas; it is not a ranking or AI-citation prediction.
+
+### Build and install the extension
+
+```bash
+npm run build:extension
+```
+
+Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `extension/dist` in this checkout. Alternatively, extract `public/downloads/auditai-pip.zip` and load the extracted folder. Pin Pip, visit a webpage, click its toolbar icon, then select **Audit this page**. This is an unpacked extension; it has not been published to the Chrome Web Store.
+
+See [extension/README.md](extension/README.md) for permissions, privacy, and daily usage. Privacy notes also live at `/assistant/privacy` and inside the extension.
+
+### Verify the assistant
+
+```bash
+npm test
+npm run lint
+npm run build
+npm run typecheck
+npx playwright install chromium
+npm run test:browser
+```
+
+Browser verification starts a separate production test server on port 3100 and stops it afterward. It exercises the actual unpacked extension and website, writes screenshots and a result summary to ignored `artifacts/`, and checks a live public HTTPS audit. Set `PIP_SKIP_PUBLIC_AUDIT=1` to skip that external network check; CI does this while still testing the local API rejection paths. `PIP_CHROMIUM_PATH` can select a compatible installed Chromium executable.
+
+The existing queue-backed AI-readiness scanner is documented below. Its optional providers and environment settings are separate from Pip's free audit path.
+
 AuditAI is a Next.js 16 application that scans public websites and generates an AI-readiness report across four pillars:
 
 - Schema Markup

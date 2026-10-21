@@ -29,8 +29,32 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Test shared SEO rules
+        run: npm test
+
       - name: Build application
         run: npm run build
+
+      - name: Validate TypeScript
+        run: npm run typecheck
+
+      - name: Install Chromium for extension and website verification
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify extension and website in Chromium
+        run: npm run test:browser
+        env:
+          PIP_SKIP_PUBLIC_AUDIT: "1"
+
+      - name: Upload extension and verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-extension-and-verification
+          path: |
+            public/downloads/auditai-pip.zip
+            artifacts/*.png
+            artifacts/browser-results.json
 
   deploy-live:
     name: Deploy live frontend (Vercel)

@@ -26,4 +26,4 @@ The extension sees the current rendered DOM, which may include signed-in content
 
 ## Regression verification
 
-`npm test`, `npm run typecheck`, `npm run lint`, and `npm run build` cover the shared rules, package, and website. The browser smoke test exercises the actual unpacked service worker, DOM audit, highlights, storage, export, and workbench. The Chrome side-panel toolbar gesture also needs a manual check in your Chrome profile.
+`npm test`, `npm run typecheck`, `npm run lint`, and `npm run build` cover the shared rules, package, and website. After `npx playwright install chromium`, run `npm run test:browser`. The browser test invokes the real extension toolbar action through Chrome's debugging protocol and exercises the unpacked service worker, DOM audit, highlights, permission expiry, storage, export, and workbench. Screenshots and a machine-readable summary are saved to ignored `artifacts/`.

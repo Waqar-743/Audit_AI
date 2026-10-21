@@ -10,7 +10,9 @@
     "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "build:extension": "node scripts/build-extension.mjs",
-    "prebuild": "npm run build:extension"
+    "prebuild": "npm run build:extension",
+    "predev": "npm run build:extension",
+    "test:browser": "node scripts/verify-browser.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
