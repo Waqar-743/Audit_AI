@@ -376,7 +376,7 @@ nav {
   background: var(--bg3);
 }
 
-#url-input {
+.hero-input-wrap #url-input {
   flex: 1;
   background: none;
   border: none;
@@ -387,7 +387,7 @@ nav {
   padding: 16px 18px;
 }
 
-#url-input::placeholder {
+.hero-input-wrap #url-input::placeholder {
   color: var(--muted);
 }
 

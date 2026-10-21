@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { verifyHomepage } from "./homepage-smoke.mjs";
 import { createServer } from "node:http";
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -277,38 +278,7 @@ try {
     await website
       .getByRole("heading", { name: "Your work stays yours." })
       .waitFor();
-    await website.setViewportSize({ width: 1380, height: 1000 });
-    await website.goto(base);
-    assert.equal(
-      await website.locator(".hero-headline").count(),
-      1,
-      "Existing landing hero preserved",
-    );
-    assert.equal(
-      await website.locator("#pricing").count(),
-      1,
-      "Free companion replaces paid tiers",
-    );
-    assert.equal(
-      await website.locator("#url-input").count(),
-      1,
-      "Existing scan input preserved",
-    );
-    await website.screenshot({
-      path: "artifacts/original-website-preserved.png",
-      fullPage: true,
-    });
-    await website.locator("#pricing").scrollIntoViewIfNeeded();
-    await website.locator("#pricing .section-label.visible").waitFor();
-    await website
-      .locator("#pricing")
-      .screenshot({
-        path: "artifacts/website-pip-invitation.png",
-        animations: "disabled",
-      });
-    results.push(
-      "Website UI with controlled audit fixture: findings, drafts, persistence, local coach, reset, mobile layout, download, privacy, deep link, and existing landing verified",
-    );
+    await verifyHomepage({ website, context, base, source, results });
 
     const blocked = await context.request.post(`${base}/api/assistant`, {
       data: { url: "http://127.0.0.1" },

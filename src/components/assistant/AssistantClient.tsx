@@ -67,15 +67,22 @@ function Finding({ check }: { check: SeoCheck }) {
   );
 }
 
-export default function AssistantClient() {
+export default function AssistantClient({
+  initialUrl = "",
+  autoStart = false,
+}: {
+  initialUrl?: string;
+  autoStart?: boolean;
+}) {
   const [view, setView] = useState<View>("audit");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [report, setReport] = useState<SeoReport | null>(null);
   const [history, setHistory] = useState<SeoReport[]>([]);
   const [prefs, setPrefs] = useState<Preferences>(normalizePreferences(null));
+  const [restored, setRestored] = useState(false);
   const [filter, setFilter] = useState("All");
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<ReturnType<typeof askPip> | null>(null);
@@ -83,6 +90,8 @@ export default function AssistantClient() {
   const [draftDescription, setDraftDescription] = useState("");
   const requestRef = useRef<AbortController | null>(null);
   const hydratedRef = useRef(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const autoStartedRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -97,14 +106,19 @@ export default function AssistantClient() {
             : [],
         );
         setPrefs(normalizePreferences(saved?.preferences));
-        if (window.location.hash === "#extension") setView("extension");
+        const hashView = window.location.hash.slice(1);
+        if (views.some((item) => item.key === hashView))
+          setView(hashView as View);
       } catch {
         if (mounted)
           setNotice(
             "Local storage is unavailable. You can still audit a page and export its report.",
           );
       } finally {
-        hydratedRef.current = true;
+        if (mounted) {
+          hydratedRef.current = true;
+          setRestored(true);
+        }
       }
     }
     void restore();
@@ -112,7 +126,23 @@ export default function AssistantClient() {
       mounted = false;
       requestRef.current?.abort();
     };
-  }, []);
+  }, [initialUrl, autoStart]);
+
+  // Submit only after restored reports/preferences have committed to the form's handler.
+  useEffect(() => {
+    if (!restored || !initialUrl || !autoStart || autoStartedRef.current)
+      return;
+    const frame = requestAnimationFrame(() => {
+      autoStartedRef.current = true;
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + window.location.hash,
+      );
+      formRef.current?.requestSubmit();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [restored, initialUrl, autoStart]);
 
   function persist(reports: SeoReport[], preferences: Preferences) {
     if (!hydratedRef.current) return;
@@ -318,7 +348,7 @@ export default function AssistantClient() {
             <span>Your SEO field companion</span>
           </div>
         </section>
-        <form className="pip-entry" onSubmit={runAudit}>
+        <form ref={formRef} className="pip-entry" onSubmit={runAudit}>
           <label htmlFor="pip-url">Which page are we helping today?</label>
           <div className="pip-url-row">
             <input

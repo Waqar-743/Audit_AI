@@ -5,17 +5,15 @@ import styles from "./pip-invitation.module.css";
 export default function PipInvitation() {
   return (
     <section id="pricing" className={styles.section}>
-      <div className="section-label reveal">
-        A free companion for your next step
-      </div>
+      <div className="section-label">A free companion for your next step</div>
       <div className={styles.welcome}>
         <div>
-          <h2 className="section-title reveal">
+          <h2 className="section-title">
             Meet Pip.
             <br />
             Give your page <em>wings.</em>
           </h2>
-          <p className="section-sub reveal">
+          <p className="section-sub">
             A careful little parrot with a practical job: help you understand
             your page&apos;s SEO, read the evidence, and make the next useful
             fix.
