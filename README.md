@@ -1,4 +1,16 @@
-# AuditAI
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Waqar-743/Audit_AI/pip-v1.0.0/public/birds/parrot.svg" width="160" height="134" alt="Pip, the lime-green parrot SEO companion">
+</p>
+<h1 align="center">AuditAI · Pip</h1>
+<p align="center">
+  <strong>Small companion. Stronger pages.</strong><br>
+  A free SEO assistant for careful page audits, useful fixes, and private field notes.<br>
+  No signup, payment, or API keys.
+</p>
+<p align="center">
+  <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
+  · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0">Release notes & assets</a>
+</p>
 
 <p align="center">
   <img src="public/birds/parrot.svg" width="144" height="120" alt="Pip, the lime-green parrot SEO companion">
