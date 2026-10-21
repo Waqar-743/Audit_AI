@@ -63,7 +63,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     environment:
       name: production
-      url: https://audit-ai-app.vercel.app
+      url: https://audit-ai-fawn.vercel.app
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -154,4 +154,4 @@ jobs:
           echo "deployment_url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
           echo "### 🚀 Deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "Live URL: $DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "Production: https://audit-ai-app.vercel.app" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production: https://audit-ai-fawn.vercel.app" >> "$GITHUB_STEP_SUMMARY"

@@ -4,7 +4,7 @@ No sign-in, paid features, API keys, or background page collection. All extensio
 
 ## Install the release download
 
-1. Download [auditai-pip.zip from Pip v1.0.0](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip).
+1. Download [auditai-pip.zip from Pip v1.0.1](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.1/auditai-pip.zip).
 2. Extract the ZIP into a permanent folder.
 3. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
 4. Select the extracted folder containing `manifest.json`.
@@ -12,7 +12,7 @@ No sign-in, paid features, API keys, or background page collection. All extensio
 
 The download requires desktop Chrome 120 or later. No Node.js installation, build tools, account, or API key are needed to use it. Keep the extracted folder on your computer. This is a manually installed extension; it has not been published to the Chrome Web Store.
 
-Release assets also include the original [parrot SVG](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/parrot.svg) and `SHA256SUMS.txt`. See the [release notes](https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0) for features, scope, and installation guidance.
+Release assets also include the original [parrot SVG](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.1/parrot.svg) and `SHA256SUMS.txt`. See the [release notes](https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.1) for features, scope, and installation guidance.
 
 ## Build from source
 

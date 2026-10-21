@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Waqar-743/Audit_AI/pip-v1.0.0/public/birds/parrot.svg" width="160" height="134" alt="Pip, the lime-green parrot SEO companion">
+  <img src="https://raw.githubusercontent.com/Waqar-743/Audit_AI/pip-v1.0.1/public/birds/parrot.svg" width="160" height="134" alt="Pip, the lime-green parrot SEO companion">
 </p>
 <h1 align="center">AuditAI · Pip</h1>
 <p align="center">
@@ -8,9 +8,9 @@
   No signup, payment, or API keys.
 </p>
 <p align="center">
-  <a href="https://audit-ai-app.vercel.app"><strong>Visit Pip</strong></a>
-  · <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
-  · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0">Release notes & assets</a>
+  <a href="https://audit-ai-fawn.vercel.app"><strong>Visit Pip</strong></a>
+  · <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.1/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
+  · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.1">Release notes & assets</a>
 </p>
 
 ## Pip: the free SEO assistant and Chrome extension
@@ -46,7 +46,7 @@ The website URL audit reads initial public HTML with bounded, DNS-pinned HTTP re
 
 ### Download and install the extension
 
-Download [auditai-pip.zip from the Pip v1.0.0 release](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip). You do not need Node.js or the source code to use this download.
+Download [auditai-pip.zip from the Pip v1.0.1 release](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.1/auditai-pip.zip). You do not need Node.js or the source code to use this download.
 
 1. Extract the ZIP into a permanent folder on your computer.
 2. Open `chrome://extensions` in Chrome 120 or later.
@@ -56,7 +56,7 @@ Download [auditai-pip.zip from the Pip v1.0.0 release](https://github.com/Waqar-
 
 Keep the extracted folder: Chrome loads the extension from that location. To update a manually installed copy, extract the newer release into the same folder and click **Reload** on its extension card. Your field notes remain in that browser profile when reloading the same installed extension.
 
-This release is an unpacked extension, not a Chrome Web Store listing. It runs locally and needs no account or provider key. The release also includes the [Pip parrot SVG](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/parrot.svg) and SHA-256 checksums for the downloadable files.
+This release is an unpacked extension, not a Chrome Web Store listing. It runs locally and needs no account or provider key. The release also includes the [Pip parrot SVG](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.1/parrot.svg) and SHA-256 checksums for the downloadable files.
 
 ### Build the extension from source
 
@@ -92,7 +92,7 @@ AuditAI is a Next.js 16 application that scans public websites and generates an 
 
 The platform uses a queue-first architecture so requests return quickly while crawl and analysis work runs asynchronously.
 
-Live app: https://audit-ai-app.vercel.app
+Live app: https://audit-ai-fawn.vercel.app
 
 ## Highlights
 

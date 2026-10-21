@@ -16,12 +16,12 @@ export async function verifyHomepage({
   assert.match($('meta[name="description"]').attr("content"), /No signup/);
   assert.equal(
     new URL($('link[rel="canonical"]').attr("href")).href,
-    "https://audit-ai-app.vercel.app/",
+    "https://audit-ai-fawn.vercel.app/",
   );
   assert.equal($("h1").length, 1);
   assert.equal(
     $('meta[property="og:image"]').attr("content"),
-    "https://audit-ai-app.vercel.app/social/pip-preview.png",
+    "https://audit-ai-fawn.vercel.app/social/pip-preview.png",
   );
   const graph = JSON.parse(
     $('script[type="application/ld+json"]').first().text(),
@@ -44,7 +44,7 @@ export async function verifyHomepage({
   const robots = await context.request.get(`${base}/robots.txt`);
   assert.match(
     await robots.text(),
-    /Sitemap: https:\/\/audit-ai-app.vercel.app\/sitemap.xml/,
+    /Sitemap: https:\/\/audit-ai-fawn.vercel.app\/sitemap.xml/,
   );
   const sitemap = await context.request.get(`${base}/sitemap.xml`);
   const sitemapText = await sitemap.text();
@@ -60,7 +60,7 @@ export async function verifyHomepage({
   assert.match(queryPage('meta[name="robots"]').attr("content"), /noindex/);
   assert.equal(
     queryPage('link[rel="canonical"]').attr("href"),
-    "https://audit-ai-app.vercel.app/assistant",
+    "https://audit-ai-fawn.vercel.app/assistant",
   );
   const reportPage = load(
     await (await context.request.get(`${base}/scan/homepage-smoke`)).text(),

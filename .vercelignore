@@ -1,0 +1,13 @@
+.git/
+.next/
+.vercel/
+node_modules/
+artifacts/
+extension/dist/
+public/downloads/
+.env*
+*.tsbuildinfo
+coverage/
+build/
+out/
+.DS_Store

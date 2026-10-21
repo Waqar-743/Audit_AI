@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
-export const SITE_URL = "https://audit-ai-app.vercel.app";
+export const SITE_URL = "https://audit-ai-fawn.vercel.app";
 export const RELEASE_URL =
-  "https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0";
+  "https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.1";
 export const EXTENSION_DOWNLOAD_URL =
-  "https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip";
+  "https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.1/auditai-pip.zip";
 export const SITE_DESCRIPTION =
   "Meet Pip, your free SEO assistant. Check page titles, metadata, headings, links, images, and structured data. No signup, payment, or API keys.";
 

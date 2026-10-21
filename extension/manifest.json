@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AuditAI · Pip SEO assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A free, private SEO companion. Inspect the page you're viewing, understand the evidence, and plan useful fixes. No account.",
   "minimum_chrome_version": "120",
   "permissions": ["activeTab", "scripting", "storage", "sidePanel"],
@@ -20,8 +20,12 @@
     "48": "icons/48.png",
     "128": "icons/128.png"
   },
-  "background": { "service_worker": "background.js" },
-  "side_panel": { "default_path": "panel.html" },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'; img-src 'self' data:; style-src 'self'; base-uri 'none';"
   }
