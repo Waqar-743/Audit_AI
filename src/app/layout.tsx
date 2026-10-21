@@ -1,24 +1,20 @@
 import type { Metadata } from "next";
+import { pageMetadata, SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AuditAI — Is Your Website Ready for AI Search?",
-  description:
-    "Run a 60-second AI audit. Find out exactly why AI search engines skip your content — and get the precise fixes to start getting cited by ChatGPT, Perplexity, Gemini, and Claude.",
-  keywords: [
-    "AI SEO",
-    "AI search optimization",
-    "ChatGPT SEO",
-    "structured data audit",
-    "schema markup checker",
-    "AI readiness score",
-  ],
-  openGraph: {
-    title: "AuditAI — Is Your Website Ready for AI Search?",
-    description:
-      "Run a 60-second AI audit. Find out why AI search engines skip your content and get precise fixes.",
-    type: "website",
+  metadataBase: new URL(SITE_URL),
+  ...pageMetadata(
+    "Free SEO Assistant & Chrome Extension | AuditAI · Pip",
+    SITE_DESCRIPTION,
+    "/",
+  ),
+  applicationName: "AuditAI · Pip",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: "/apple-icon.png",
   },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
@@ -40,7 +36,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

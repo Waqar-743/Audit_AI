@@ -1,8 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Pip privacy & audit scope | AuditAI",
+  ...pageMetadata(
+    "Privacy & audit scope | AuditAI · Pip",
+    "Understand how Pip handles local field notes, public URL audits, extension permissions, and the limits of automated SEO checks.",
+    "/assistant/privacy",
+  ),
 };
 
 export default function PrivacyPage() {
