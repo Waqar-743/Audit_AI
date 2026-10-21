@@ -8,20 +8,33 @@
   No signup, payment, or API keys.
 </p>
 <p align="center">
-  <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
+  <a href="https://audit-ai-app.vercel.app"><strong>Visit Pip</strong></a>
+  · <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
   · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0">Release notes & assets</a>
 </p>
 
 ## Pip: the free SEO assistant and Chrome extension
 
-Pip lives alongside the original website at `/assistant`. No signup, payment, external AI service, or provider keys are required. It shares deterministic, evidence-based audit rules with the local Chrome extension and uses the website's existing charcoal, warm-white, and lime colors.
+Pip welcomes visitors on the homepage and provides the full assistant at `/assistant`. No signup, payment, external AI service, or provider keys are required. It shares deterministic, evidence-based audit rules with the local Chrome extension and uses the website's existing charcoal, warm-white, and lime colors.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000/assistant`. The development and production build commands also generate the extension download. The original landing page, URL scanner, and scan reports remain available; paid-tier messaging now points to the free assistant.
+Open `http://localhost:3000`. Enter a public page address to start an audit, or open `/assistant` directly. The development and production build commands also generate the extension download. The original URL scanner remains available in the homepage's **Looking for the original AI-readiness scanner?** disclosure, with its existing API and report routes preserved.
+
+The homepage follows Pip's egg-to-flight story: bring a page, understand the evidence, make a useful change, and return to your field notes. An optional name and work goal personalize the welcome and guidance, using the assistant's existing local preferences without deleting saved reports. Mobile navigation, keyboard controls, native expandable FAQs, and readable server-rendered content keep the journey accessible.
+
+### Website branding and search metadata
+
+Pip's original parrot SVG appears in website branding and the browser icon. Matching generated assets include an Apple home-screen icon, favicon, and 1200×630 social preview. Regenerate these checked-in assets after changing the SVG:
+
+```bash
+node scripts/create-site-branding.mjs
+```
+
+Public pages have descriptive titles, descriptions, canonical URLs, and sharing metadata. The homepage includes factual Organization, WebSite, and free WebApplication JSON-LD, without invented ratings or ranking promises. `/sitemap.xml` lists the homepage, assistant, and privacy page; `/robots.txt` links to it. Individual scan reports and assistant URLs containing audit targets use `noindex`. Audit targets are removed from the address bar when a homepage audit starts. The canonical production origin is configured in `src/lib/site.ts`.
 
 - **Page audit:** indexing instructions, titles and descriptions, canonicals, headings, image alternatives, link names, and JSON-LD syntax, with evidence and reference links.
 - **Workbench:** edit a title and description, preview a possible snippet, and copy escaped metadata or a generic WebPage JSON-LD draft. No changes are automatically published.
@@ -66,7 +79,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Browser verification starts a separate production test server on port 3100 and stops it afterward. It exercises the actual unpacked extension and website, writes screenshots and a result summary to ignored `artifacts/`, and checks a live public HTTPS audit. Set `PIP_SKIP_PUBLIC_AUDIT=1` to skip that external network check; CI does this while still testing the local API rejection paths. `PIP_CHROMIUM_PATH` can select a compatible installed Chromium executable.
+Browser verification starts a separate production test server on port 3100 and stops it afterward. It exercises the actual unpacked extension and website, including homepage personalization, audit handoff, keyboard navigation, 320–1380px layouts, metadata, and content without JavaScript. It writes screenshots and a result summary to ignored `artifacts/` and checks a live public HTTPS audit. Set `PIP_SKIP_PUBLIC_AUDIT=1` to skip that external network check; CI does this while still testing the local API rejection paths. `PIP_CHROMIUM_PATH` can select a compatible installed Chromium executable.
 
 The existing queue-backed AI-readiness scanner is documented below. Its optional providers and environment settings are separate from Pip's free audit path.
 

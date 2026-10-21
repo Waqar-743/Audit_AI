@@ -1,6 +1,6 @@
 # Free SEO assistant: implementation contract
 
-- Preserve the existing landing layout, scan routes, and reports. Add `/assistant`, small navigation entries, and replace paid-tier messaging with the free companion invitation.
+- Preserve the existing scan routes, report flow, colors, and typography. Add `/assistant` and promote it through the homepage with Pip branding, factual SEO copy, local personalization, and an egg-to-flight story. Keep the original scanner accessible in its own homepage disclosure.
 - Ship a completely free, account-free assistant. No email collection, subscription, provider keys, or locked findings.
 - Share deterministic audit rules between the website and a Manifest V3 Chrome side panel. Do not require paid AI inference.
 - State what was observed, the extraction mode, and what was not tested. A checklist score is not a ranking, indexing, or AI citation prediction.
@@ -17,6 +17,7 @@
 3. Matching local-first Chrome extension, packaging, and installation instructions.
 4. Website assistant, minimal landing integration, personalization, and free messaging.
 5. Browser verification, regression fixes, and CI checks.
+6. Website SVG branding, favicon and social assets, accurate search metadata, and a responsive story-led homepage with direct audit handoff and shared local preferences.
 
 ## Rule references
 
