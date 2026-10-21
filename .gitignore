@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated assistant artifacts and local verification
+/extension/dist/
+/public/downloads/
+/artifacts/
+/.audit-report.json
