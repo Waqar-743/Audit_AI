@@ -1,5 +1,18 @@
 # AuditAI
 
+<p align="center">
+  <img src="public/birds/parrot.svg" width="144" height="120" alt="Pip, the lime-green parrot SEO companion">
+</p>
+<p align="center">
+  <strong>Small companion. Stronger pages.</strong><br>
+  A free SEO assistant for careful page audits, useful fixes, and private field notes.<br>
+  No signup, payment, or API keys.
+</p>
+<p align="center">
+  <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
+  · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0">Release notes & assets</a>
+</p>
+
 ## Pip: the free SEO assistant and Chrome extension
 
 Pip lives alongside the original website at `/assistant`. No signup, payment, external AI service, or provider keys are required. It shares deterministic, evidence-based audit rules with the local Chrome extension and uses the website's existing charcoal, warm-white, and lime colors.
@@ -19,13 +32,27 @@ Open `http://localhost:3000/assistant`. The development and production build com
 
 The website URL audit reads initial public HTML with bounded, DNS-pinned HTTP requests and redirect validation. It does not execute target JavaScript. The extension reads the current rendered page. Each report states its extraction mode and limitations. The checklist score counts passed pass/fail checks and excludes reviews and untested areas; it is not a ranking or AI-citation prediction.
 
-### Build and install the extension
+### Download and install the extension
+
+Download [auditai-pip.zip from the Pip v1.0.0 release](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip). You do not need Node.js or the source code to use this download.
+
+1. Extract the ZIP into a permanent folder on your computer.
+2. Open `chrome://extensions` in Chrome 120 or later.
+3. Enable **Developer mode**, click **Load unpacked**, and choose the extracted folder containing `manifest.json`.
+4. Pin **AuditAI · Pip SEO assistant** to the toolbar.
+5. Visit a webpage, click Pip's toolbar icon, then select **Audit this page**.
+
+Keep the extracted folder: Chrome loads the extension from that location. To update a manually installed copy, extract the newer release into the same folder and click **Reload** on its extension card. Your field notes remain in that browser profile when reloading the same installed extension.
+
+This release is an unpacked extension, not a Chrome Web Store listing. It runs locally and needs no account or provider key. The release also includes the [Pip parrot SVG](https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/parrot.svg) and SHA-256 checksums for the downloadable files.
+
+### Build the extension from source
 
 ```bash
 npm run build:extension
 ```
 
-Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `extension/dist` in this checkout. Alternatively, extract `public/downloads/auditai-pip.zip` and load the extracted folder. Pin Pip, visit a webpage, click its toolbar icon, then select **Audit this page**. This is an unpacked extension; it has not been published to the Chrome Web Store.
+Load the generated `extension/dist` folder using the installation steps above. The same build also writes `public/downloads/auditai-pip.zip` for distribution.
 
 See [extension/README.md](extension/README.md) for permissions, privacy, and daily usage. Privacy notes also live at `/assistant/privacy` and inside the extension.
 
