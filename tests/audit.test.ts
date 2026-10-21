@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { auditPage, googleHeaderDirectives } from "../src/shared/seo/audit";
 import { extractSource } from "../src/lib/assistant/extract-source";
-import { isPublicAddress, normalizePublicUrl } from "../src/lib/assistant/safe-fetch";
+import { decodeHtml, isPublicAddress, normalizePublicUrl } from "../src/lib/assistant/safe-fetch";
 
 function report(body = "", head = "") {
   return auditPage(extractSource(`<!doctype html><html lang="en"><head><title>A useful page about garden birds</title><meta name="description" content="Learn to identify garden birds and provide a safe nesting space with practical advice for your own garden."><meta name="viewport" content="width=device-width, initial-scale=1">${head}</head><body><h1>Garden birds</h1>${body}</body></html>`, "https://example.com/birds", 200, ""));
@@ -52,6 +52,16 @@ test("score excludes reviews and unknowns and clearly states extraction limitati
   assert.equal(result.score, Math.round(result.counts.pass / (result.counts.pass + result.counts.fail) * 100));
   assert.ok(result.counts.unknown > 0 && result.counts.review > 0);
   assert.match(result.limitations[0], /JavaScript was not executed/);
+});
+test("oversized structured data is reported as untested, not malformed", () => {
+  const result = report("", `<script type="application/ld+json">${JSON.stringify({ "@type": "WebPage", text: "x".repeat(210_000) })}</script>`);
+  assert.equal(check(result, "schema-json").status, "unknown");
+  assert.ok(result.limitations.some((item) => /partial snapshot/.test(item)));
+});
+test("HTML decoding honors response headers and meta charset", () => {
+  assert.equal(decodeHtml(Buffer.from([0x63, 0x61, 0x66, 0xe9]), "text/html; charset=iso-8859-1"), "café");
+  const page = Buffer.concat([Buffer.from('<meta charset="windows-1252"><title>'), Buffer.from([0xe9]), Buffer.from('</title>')]);
+  assert.match(decodeHtml(page, "text/html"), /<title>é<\/title>/);
 });
 test("private, loopback, mapped IPv6, and metadata addresses cannot be requested", () => {
   for (const address of ["127.0.0.1", "10.1.2.3", "169.254.169.254", "172.16.0.5", "192.168.0.1", "100.64.0.1", "0.0.0.0", "224.0.0.1", "::1", "::ffff:127.0.0.1", "fd00::1", "fe80::1", "2001:db8::1", "2002:7f00:1::"]) assert.equal(isPublicAddress(address), false, address);

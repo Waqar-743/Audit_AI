@@ -30,6 +30,7 @@ export function extractDocument(): PageSnapshot {
       return { href: (element.getAttribute("href") || "").slice(0, 2_048), text: clean(text).slice(0, 500), rel: element.getAttribute("rel") || "" };
     }),
     jsonLd: schemaNodes.slice(0, 50).map((element) => (element.textContent || "").slice(0, 200_000)),
+    jsonLdTruncated: schemaNodes.length > 50 || schemaNodes.some((element) => (element.textContent || "").length > 200_000),
     hasOtherStructuredData: !!document.querySelector("[itemscope], [typeof]"),
     wordCount: limitedText ? limitedText.split(/\s+/).length : 0, excerpt: limitedText.slice(0, 3_000), og,
     truncated: text.length > 200_000 || headingNodes.length > 1_000 || imageNodes.length > 5_000 || linkNodes.length > 5_000 || schemaNodes.length > 50 || schemaNodes.some((element) => (element.textContent || "").length > 200_000),

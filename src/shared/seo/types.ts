@@ -18,6 +18,7 @@ export interface PageSnapshot {
   images: { src: string; alt: string | null }[];
   links: { href: string; text: string; rel: string }[];
   jsonLd: string[];
+  jsonLdTruncated?: boolean;
   hasOtherStructuredData: boolean;
   wordCount: number;
   excerpt: string;

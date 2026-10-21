@@ -34,6 +34,7 @@ export function extractSource(html: string, url: string, statusCode: number, res
       return { href: ($(element).attr("href") || "").slice(0, 2_048), text: clean($(element).attr("aria-label") || label || $(element).text() || $(element).find("img[alt]").toArray().map((image) => $(image).attr("alt")).join(" ")).slice(0, 500), rel: $(element).attr("rel") || "" };
     }),
     jsonLd: schemaNodes.slice(0, 50).map((element) => $(element).text().slice(0, 200_000)),
+    jsonLdTruncated: schemaNodes.length > 50 || schemaNodes.some((element) => $(element).text().length > 200_000),
     hasOtherStructuredData: $("[itemscope],[typeof]").length > 0,
     wordCount: limitedText ? limitedText.split(/\s+/).length : 0, excerpt: limitedText.slice(0, 3_000), og,
     truncated: text.length > 200_000 || headingNodes.length > 1_000 || imageNodes.length > 5_000 || linkNodes.length > 5_000 || schemaNodes.length > 50 || schemaNodes.some((element) => $(element).text().length > 200_000),

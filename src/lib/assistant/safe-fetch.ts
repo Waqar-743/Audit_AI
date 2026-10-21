@@ -6,6 +6,13 @@ import { request as httpsRequest } from "node:https";
 const MAX_BYTES = 2 * 1024 * 1024;
 export class AuditFetchError extends Error {}
 
+export function decodeHtml(buffer: Buffer, contentType: string): string {
+  const headerCharset = contentType.match(/charset\s*=\s*["']?([^\s;"']+)/i)?.[1];
+  const metaCharset = buffer.subarray(0, 1_024).toString("ascii").match(/<meta\b[^>]*charset\s*=\s*["']?([^\s;"'/>]+)/i)?.[1];
+  try { return new TextDecoder(headerCharset || metaCharset || "utf-8").decode(buffer); }
+  catch { throw new AuditFetchError("This page uses an unsupported character encoding. Use the extension to inspect the correctly rendered page."); }
+}
+
 export function isPublicAddress(address: string): boolean {
   const family = isIP(address);
   if (family === 4) {
@@ -71,7 +78,8 @@ export async function fetchPublicHtml(value: string, signal?: AbortSignal): Prom
         });
         res.on("end", () => {
           const raw = res.headers["x-robots-tag"];
-          resolve({ status, html: Buffer.concat(chunks).toString("utf8"), robots: Array.isArray(raw) ? raw.join(", ") : raw || "" });
+          try { resolve({ status, html: decodeHtml(Buffer.concat(chunks), res.headers["content-type"] || ""), robots: Array.isArray(raw) ? raw.join(", ") : raw || "" }); }
+          catch (error) { reject(error); }
         });
         res.on("error", reject);
       });
