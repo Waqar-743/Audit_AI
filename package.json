@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:extension": "node scripts/build-extension.mjs",
+    "prebuild": "npm run build:extension"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

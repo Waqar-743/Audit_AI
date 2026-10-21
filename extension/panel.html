@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pip · SEO assistant</title>
+    <link rel="stylesheet" href="assistant.css" />
+  </head>
+  <body class="pip compact">
+    <a class="pip-skip" href="#main">Skip to your audit</a>
+    <div class="pip-shell">
+      <header class="pip-nav">
+        <a
+          class="pip-brand"
+          href="https://audit-ai-app.vercel.app/assistant"
+          target="_blank"
+          rel="noreferrer"
+          ><img src="birds/parrot.svg" alt="" />AuditAI<span class="pip-kicker"
+            >/ Pip</span
+          ></a
+        ><span class="pip-kicker">Free. Local. Yours.</span>
+      </header>
+      <section class="pip-hero">
+        <div>
+          <span class="pip-kicker">Your page, a little stronger.</span>
+          <h1>A fresh pair of <em>wings.</em></h1>
+          <p id="greeting">I'm Pip. Let's find the next useful fix.</p>
+        </div>
+        <img id="mascot" src="birds/parrot.svg" alt="Pip, your parrot guide" />
+      </section>
+      <section class="pip-entry">
+        <button id="audit" type="button">Audit this page</button
+        ><small class="pip-help"
+          >Click the toolbar icon on a page to grant access. The audit stays on
+          your device.</small
+        >
+      </section>
+      <p id="message" class="pip-notice" role="status" hidden></p>
+      <p id="error" class="pip-error" role="alert" hidden></p>
+      <nav class="pip-tabs" aria-label="Assistant views" role="tablist">
+        <button
+          id="tab-audit"
+          role="tab"
+          aria-selected="true"
+          aria-controls="view-audit"
+        >
+          Page audit</button
+        ><button
+          id="tab-tools"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-tools"
+          tabindex="-1"
+        >
+          Workbench</button
+        ><button
+          id="tab-notebook"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-notebook"
+          tabindex="-1"
+        >
+          Field notes
+        </button>
+      </nav>
+      <main id="main">
+        <section id="view-audit" role="tabpanel" aria-labelledby="tab-audit">
+          <div id="loading" class="pip-loading" role="status" hidden>
+            <img src="birds/scout.svg" alt="" />
+            <p>Pip is looking closely at this page…</p>
+            <div class="pip-skeleton"></div>
+            <div class="pip-skeleton"></div>
+            <div class="pip-skeleton"></div>
+          </div>
+          <div id="empty" class="pip-empty">
+            <img
+              src="birds/egg.svg"
+              alt="An egg, the start of your page's journey"
+            />
+            <h2>Every good page starts somewhere.</h2>
+            <p>
+              Open a webpage and run your first audit. I'll separate confirmed
+              findings from things that need your judgment.
+            </p>
+          </div>
+          <div id="report" hidden></div>
+        </section>
+        <section
+          id="view-tools"
+          role="tabpanel"
+          aria-labelledby="tab-tools"
+          hidden
+        >
+          <h2>Your workbench</h2>
+          <p class="pip-muted">
+            Edit a draft, preview it, and copy the code. Nothing is changed on
+            the website.
+          </p>
+          <div class="pip-fields">
+            <div>
+              <label for="draft-title">Page title</label
+              ><input
+                id="draft-title"
+                maxlength="250"
+                placeholder="A useful, specific title"
+              />
+            </div>
+            <div>
+              <label for="draft-description">Search description</label
+              ><textarea
+                id="draft-description"
+                maxlength="600"
+                placeholder="Describe what this page helps the visitor do."
+              ></textarea>
+            </div>
+          </div>
+          <section class="pip-section">
+            <h3>Illustrative search preview</h3>
+            <div id="preview" class="pip-preview"></div>
+            <small class="pip-help"
+              >Search engines may choose a different title or snippet.</small
+            >
+          </section>
+          <div class="pip-actions">
+            <button id="copy-meta">Copy metadata</button
+            ><button id="copy-schema" class="pip-secondary">
+              Copy WebPage JSON-LD
+            </button>
+          </div>
+          <p class="pip-help">
+            Markup is a draft using your inputs. Check factual accuracy and
+            validate before publishing. It does not add rich-result eligibility
+            by itself.
+          </p>
+        </section>
+        <section
+          id="view-notebook"
+          role="tabpanel"
+          aria-labelledby="tab-notebook"
+          hidden
+        >
+          <h2>Your field notes</h2>
+          <p class="pip-muted">
+            The latest 20 audits, saved in this browser. No account, no sync.
+          </p>
+          <div class="pip-fields">
+            <div>
+              <label for="nickname">What should Pip call you? (optional)</label
+              ><input
+                id="nickname"
+                maxlength="40"
+                autocomplete="off"
+                placeholder="Your name"
+              />
+            </div>
+            <div>
+              <label for="goal">What are you working on?</label
+              ><select id="goal">
+                <option value="my site">My website</option>
+                <option value="client work">Client work</option>
+                <option value="learning SEO">Learning SEO</option>
+              </select>
+            </div>
+          </div>
+          <details class="pip-section">
+            <summary>Choose Pip's look · 15 original illustrations</summary>
+            <div id="bird-picker" class="pip-birds"></div>
+          </details>
+          <div id="history"></div>
+          <div class="pip-actions">
+            <button id="clear-history" class="pip-secondary">
+              Delete saved audits</button
+            ><button id="reset" class="pip-secondary">
+              Reset all local data
+            </button>
+          </div>
+          <p class="pip-help">
+            Deleting saved audits also clears the report on screen. Reset
+            removes your name and preferences too.
+          </p>
+        </section>
+      </main>
+      <footer class="pip-footer">
+        <span>No login. No paid tiers.</span
+        ><a href="privacy.html" target="_blank">Privacy & audit scope</a>
+      </footer>
+    </div>
+    <script src="panel.js"></script>
+  </body>
+</html>

@@ -1,4 +1,9 @@
-export type Category = "Discovery" | "Search appearance" | "Content" | "Images & links" | "Structured data";
+export type Category =
+  | "Discovery"
+  | "Search appearance"
+  | "Content"
+  | "Images & links"
+  | "Structured data";
 export type CheckStatus = "pass" | "fail" | "review" | "unknown";
 export type Priority = "high" | "medium" | "low";
 
@@ -49,12 +54,44 @@ export interface SeoReport {
   counts: Record<CheckStatus, number>;
   stage: "nest" | "fledgling" | "flight";
   checks: SeoCheck[];
-  metrics: { words: number; headings: number; images: number; links: number; schemaBlocks: number };
+  metrics: {
+    words: number;
+    headings: number;
+    images: number;
+    links: number;
+    schemaBlocks: number;
+  };
   preview: { title: string; description: string; canonical: string };
   limitations: string[];
 }
 
-export const birds = ["parrot", "nest", "egg", "hatching", "fledgling", "flight", "feather", "branch", "scout", "map", "leaf", "compass", "sunrise", "flock", "homecoming"] as const;
+export const birds = [
+  "parrot",
+  "nest",
+  "egg",
+  "hatching",
+  "fledgling",
+  "flight",
+  "feather",
+  "branch",
+  "scout",
+  "map",
+  "leaf",
+  "compass",
+  "sunrise",
+  "flock",
+  "homecoming",
+] as const;
 export type Bird = (typeof birds)[number];
-export interface Preferences { nickname: string; goal: "my site" | "client work" | "learning SEO"; bird: Bird }
-export const categories: Category[] = ["Discovery", "Search appearance", "Content", "Images & links", "Structured data"];
+export interface Preferences {
+  nickname: string;
+  goal: "my site" | "client work" | "learning SEO";
+  bird: Bird;
+}
+export const categories: Category[] = [
+  "Discovery",
+  "Search appearance",
+  "Content",
+  "Images & links",
+  "Structured data",
+];
