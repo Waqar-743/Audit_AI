@@ -1,4 +1,6 @@
 .pip {
+  position: relative;
+  z-index: 1;
   --p-bg: #080808;
   --p-panel: #111111;
   --p-line: #2b2d27;
@@ -11,6 +13,21 @@
   min-height: 100dvh;
   font-size: 15px;
   line-height: 1.65;
+}
+.pip section {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.pip nav {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  backdrop-filter: none;
+  border: 0;
 }
 .pip *,
 .pip *::before,

@@ -241,22 +241,21 @@ function ResultsView({ result }: { result: ScanResult }) {
 
         <div className="report-upsell-card">
           <h2 className="section-title mb-4" style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)" }}>
-            Click to see Full Report
+            Keep working with Pip
           </h2>
           <p className="section-sub report-upsell-subline mb-7 mx-auto">
-            Get detailed fix instructions, copy-paste schema code, priority roadmap, and a downloadable PDF report.
+            Review evidence, draft page metadata, and export your new assistant reports. Every tool is free, with no account required.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mx-auto">
-            <Link href="/#pricing" className="price-btn primary w-full sm:w-[320px]" style={{ maxWidth: "320px", marginInline: "auto", paddingBlock: "12px" }}>
-              <span className="block font-mono text-[10px] tracking-[0.08em] leading-none mb-2">0 for now</span>
+            <Link href="/assistant" className="price-btn primary w-full sm:w-[320px]" style={{ maxWidth: "320px", marginInline: "auto", paddingBlock: "12px" }}>
+              <span className="block font-mono text-[10px] tracking-[0.08em] leading-none mb-2">Always free</span>
               <span className="inline-flex items-center justify-center gap-2">
-                <span>Get full audit</span>
-                <span style={{ color: "var(--red)", fontSize: "12px", textDecoration: "line-through" }}>$29</span>
+                <span>Open SEO assistant</span>
               </span>
             </Link>
 
-            <Link href="/#pricing" className="price-btn w-full sm:w-[320px]" style={{ maxWidth: "320px", marginInline: "auto" }}>
-              Download PDF report
+            <Link href="/assistant#extension" className="price-btn w-full sm:w-[320px]" style={{ maxWidth: "320px", marginInline: "auto" }}>
+              Get the free Chrome extension
             </Link>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # Free SEO assistant: implementation contract
 
-- Preserve the existing landing page, scan routes, and reports. Add `/assistant` and a small navigation entry only.
+- Preserve the existing landing layout, scan routes, and reports. Add `/assistant`, small navigation entries, and replace paid-tier messaging with the free companion invitation.
 - Ship a completely free, account-free assistant. No email collection, subscription, provider keys, or locked findings.
 - Share deterministic audit rules between the website and a Manifest V3 Chrome side panel. Do not require paid AI inference.
 - State what was observed, the extraction mode, and what was not tested. A checklist score is not a ranking, indexing, or AI citation prediction.
