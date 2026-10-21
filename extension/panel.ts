@@ -56,8 +56,14 @@ async function persist() {
   }
 }
 function greet() {
+  const goal =
+    prefs.goal === "my site"
+      ? "your website"
+      : prefs.goal === "client work"
+        ? "your client work"
+        : "your next SEO lesson";
   $("greeting").textContent =
-    `${prefs.nickname ? `Hello, ${prefs.nickname}. ` : "I'm Pip. "}Let's find the next useful fix for ${prefs.goal}.`;
+    `${prefs.nickname ? `Hello, ${prefs.nickname}. ` : "I'm Pip. "}Let's find the next useful fix for ${goal}.`;
   $<HTMLImageElement>("mascot").src = `birds/${prefs.bird}.svg`;
 }
 function switchView(name: string) {
@@ -111,9 +117,9 @@ async function highlight(check: SeoCheck) {
               .map((img) => img.getAttribute("alt") || "")
               .join("");
             return !(
-              node.getAttribute("aria-label") ||
-              labelled ||
-              (node as HTMLElement).innerText ||
+              (node.getAttribute("aria-label") || "").trim() ||
+              labelled.trim() ||
+              ((node as HTMLElement).innerText || "").trim() ||
               imageText
             ).trim();
           })

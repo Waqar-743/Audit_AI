@@ -74,25 +74,21 @@ export function extractSource(
     ),
     language: ($("html").attr("lang") || "").slice(0, 100),
     viewport: meta("viewport")[0] || "",
-    headings: headingNodes
-      .slice(0, 1_000)
-      .map((element) => ({
-        level: Number(element.tagName.slice(1)),
-        text: clean($(element).text()).slice(0, 500),
-      })),
-    images: imageNodes
-      .slice(0, 5_000)
-      .map((element) => ({
-        src: (
-          $(element).attr("src") ||
-          $(element).attr("srcset") ||
-          "(no source)"
-        ).slice(0, 2_048),
-        alt:
-          $(element).attr("alt") === undefined
-            ? null
-            : clean($(element).attr("alt") || "").slice(0, 1_000),
-      })),
+    headings: headingNodes.slice(0, 1_000).map((element) => ({
+      level: Number(element.tagName.slice(1)),
+      text: clean($(element).text()).slice(0, 500),
+    })),
+    images: imageNodes.slice(0, 5_000).map((element) => ({
+      src: (
+        $(element).attr("src") ||
+        $(element).attr("srcset") ||
+        "(no source)"
+      ).slice(0, 2_048),
+      alt:
+        $(element).attr("alt") === undefined
+          ? null
+          : clean($(element).attr("alt") || "").slice(0, 1_000),
+    })),
     links: linkNodes.slice(0, 5_000).map((element) => {
       const label = ($(element).attr("aria-labelledby") || "")
         .split(/\s+/)
@@ -106,9 +102,9 @@ export function extractSource(
       return {
         href: ($(element).attr("href") || "").slice(0, 2_048),
         text: clean(
-          $(element).attr("aria-label") ||
-            label ||
-            $(element).text() ||
+          clean($(element).attr("aria-label") || "") ||
+            clean(label) ||
+            clean($(element).text()) ||
             $(element)
               .find("img[alt]")
               .toArray()

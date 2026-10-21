@@ -131,6 +131,36 @@ test("image links, aria labels, and labelledby have usable names", () => {
   );
   assert.equal(check(result, "link-names").status, "pass");
 });
+test("duplicate matching canonicals are a review; trailing slash differences are preserved", () => {
+  assert.equal(
+    check(
+      report(
+        "",
+        '<link rel="canonical" href="/birds"><link rel="canonical" href="/birds">',
+      ),
+      "canonical",
+    ).status,
+    "review",
+  );
+  assert.equal(
+    check(
+      report("", '<link rel="canonical" href="/birds/">'),
+      "canonical-target",
+    ).status,
+    "review",
+  );
+});
+test("empty accessibility labels fall back to visible link text", () => {
+  assert.equal(
+    check(
+      report(
+        '<a href="/guide" aria-label="   " aria-labelledby="missing unknown">Bird care guide</a>',
+      ),
+      "link-names",
+    ).status,
+    "pass",
+  );
+});
 test("score excludes reviews and unknowns and clearly states extraction limitations", () => {
   const result = report();
   assert.equal(

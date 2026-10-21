@@ -143,32 +143,32 @@ export function auditPage(page: PageSnapshot): SeoReport {
     reference: `${docs}crawling-indexing/https`,
   });
 
-  let canonical = "";
-  let canonicalValid = true;
-  const suppliedCanonical = page.canonicals[0]?.trim() || "";
-  if (suppliedCanonical) {
+  const targets = page.canonicals.map((raw) => {
+    if (!raw.trim()) return null;
     try {
-      const parsed = new URL(suppliedCanonical, page.baseUrl || page.url);
-      canonical = parsed.href;
-      canonicalValid = /^(https?:)$/.test(parsed.protocol);
+      const target = new URL(raw.trim(), page.baseUrl || page.url);
+      return /^(https?:)$/.test(target.protocol) ? target.href : null;
     } catch {
-      canonicalValid = false;
+      return null;
     }
-  }
+  });
+  const canonical = targets[0] || "";
+  const canonicalValid = targets.every((target) => target !== null);
+  const conflicting = new Set(targets.filter(Boolean)).size > 1;
   add({
     id: "canonical",
     category: "Discovery",
     status:
-      page.canonicals.length > 1 ||
-      !canonicalValid ||
-      (page.canonicals.length === 1 && !suppliedCanonical)
+      conflicting || !canonicalValid
         ? "fail"
-        : canonical
-          ? "pass"
-          : "review",
+        : page.canonicals.length > 1
+          ? "review"
+          : canonical
+            ? "pass"
+            : "review",
     priority: "medium",
     title: "Canonical declaration",
-    evidence: `${page.canonicals.length} HTML canonical declaration(s). ${canonical || (suppliedCanonical ? "Invalid URL." : "No canonical URL supplied.")}`,
+    evidence: `${page.canonicals.length} HTML canonical declaration(s). ${targets.length ? targets.map((target) => target || "Invalid or empty canonical URL.").join("; ") : "No canonical URL supplied."}${conflicting ? " Conflicting preferred URLs detected." : page.canonicals.length > 1 ? " Repeated declarations point to the same URL." : ""}`,
     advice:
       "Use one valid preferred URL when declaring an HTML canonical. A canonical is a hint; its absence is not an automatic indexing failure. HTTP Link canonicals are outside this check.",
     reference: references.canonical,
@@ -176,8 +176,11 @@ export function auditPage(page: PageSnapshot): SeoReport {
   });
   if (canonical && canonicalValid) {
     const preferred = new URL(canonical);
-    const normalized = (url: URL) =>
-      `${url.origin}${url.pathname.replace(/\/$/, "")}${url.search}`;
+    const normalized = (url: URL) => {
+      const copy = new URL(url);
+      copy.hash = "";
+      return copy.href;
+    };
     add({
       id: "canonical-target",
       category: "Discovery",

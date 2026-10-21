@@ -60,4 +60,13 @@ test("untrusted stored preferences and invalid reports are rejected", () => {
   assert.equal(isSeoReport(null), false);
   assert.equal(isSeoReport({ version: 1 }), false);
   assert.equal(isSeoReport(report), true);
+  assert.equal(isSeoReport({ ...report, url: "https://" }), false);
+  assert.equal(isSeoReport({ ...report, checks: [null] }), false);
+  assert.equal(
+    isSeoReport({
+      ...report,
+      checks: [{ ...report.checks[0], reference: undefined }],
+    }),
+    false,
+  );
 });

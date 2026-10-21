@@ -43,24 +43,20 @@ export function extractDocument(): PageSnapshot {
     ),
     language: document.documentElement.lang.slice(0, 100),
     viewport: meta("viewport")[0] || "",
-    headings: headingNodes
-      .slice(0, 1_000)
-      .map((element) => ({
-        level: Number(element.tagName.slice(1)),
-        text: clean(element.textContent).slice(0, 500),
-      })),
-    images: imageNodes
-      .slice(0, 5_000)
-      .map((element) => ({
-        src: (
-          element.getAttribute("src") ||
-          element.getAttribute("srcset") ||
-          "(no source)"
-        ).slice(0, 2_048),
-        alt: element.hasAttribute("alt")
-          ? clean(element.getAttribute("alt")).slice(0, 1_000)
-          : null,
-      })),
+    headings: headingNodes.slice(0, 1_000).map((element) => ({
+      level: Number(element.tagName.slice(1)),
+      text: clean(element.textContent).slice(0, 500),
+    })),
+    images: imageNodes.slice(0, 5_000).map((element) => ({
+      src: (
+        element.getAttribute("src") ||
+        element.getAttribute("srcset") ||
+        "(no source)"
+      ).slice(0, 2_048),
+      alt: element.hasAttribute("alt")
+        ? clean(element.getAttribute("alt")).slice(0, 1_000)
+        : null,
+    })),
     links: linkNodes.slice(0, 5_000).map((element) => {
       const labelledBy = (element.getAttribute("aria-labelledby") || "")
         .split(/\s+/)
@@ -68,9 +64,9 @@ export function extractDocument(): PageSnapshot {
         .map((id) => document.getElementById(id)?.textContent || "")
         .join(" ");
       const text =
-        element.getAttribute("aria-label") ||
-        labelledBy ||
-        (element as HTMLElement).innerText ||
+        clean(element.getAttribute("aria-label")) ||
+        clean(labelledBy) ||
+        clean((element as HTMLElement).innerText) ||
         Array.from(element.querySelectorAll("img[alt]"))
           .map((image) => image.getAttribute("alt"))
           .join(" ");

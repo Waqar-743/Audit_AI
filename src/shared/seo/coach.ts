@@ -151,6 +151,12 @@ export function schemaSnippet(
 export function isSeoReport(value: unknown): value is SeoReport {
   if (!value || typeof value !== "object") return false;
   const report = value as Partial<SeoReport>;
+  try {
+    const url = new URL(report.url || "");
+    if (!/^(https?:)$/.test(url.protocol) || !url.hostname) return false;
+  } catch {
+    return false;
+  }
   return (
     report.version === 1 &&
     typeof report.id === "string" &&
@@ -158,19 +164,40 @@ export function isSeoReport(value: unknown): value is SeoReport {
     typeof report.url === "string" &&
     /^https?:\/\//.test(report.url) &&
     typeof report.timestamp === "string" &&
+    Number.isFinite(Date.parse(report.timestamp)) &&
+    (report.score === null ||
+      (typeof report.score === "number" &&
+        Number.isFinite(report.score) &&
+        report.score >= 0 &&
+        report.score <= 100)) &&
     ["rendered", "source"].includes(report.mode || "") &&
     ["nest", "fledgling", "flight"].includes(report.stage || "") &&
     !!report.counts &&
+    [
+      report.counts.pass,
+      report.counts.fail,
+      report.counts.review,
+      report.counts.unknown,
+    ].every((count) => Number.isInteger(count) && count >= 0) &&
     !!report.preview &&
+    [
+      report.preview.title,
+      report.preview.description,
+      report.preview.canonical,
+    ].every((text) => typeof text === "string") &&
     Array.isArray(report.limitations) &&
     report.limitations.every((item) => typeof item === "string") &&
     Array.isArray(report.checks) &&
     report.checks.every(
       (check) =>
+        !!check &&
+        typeof check === "object" &&
         typeof check.id === "string" &&
         typeof check.title === "string" &&
         typeof check.evidence === "string" &&
         typeof check.advice === "string" &&
+        typeof check.reference === "string" &&
+        ["high", "medium", "low"].includes(check.priority) &&
         ["pass", "fail", "review", "unknown"].includes(check.status),
     )
   );
