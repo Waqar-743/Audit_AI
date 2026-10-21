@@ -12,19 +12,6 @@
   · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0">Release notes & assets</a>
 </p>
 
-<p align="center">
-  <img src="public/birds/parrot.svg" width="144" height="120" alt="Pip, the lime-green parrot SEO companion">
-</p>
-<p align="center">
-  <strong>Small companion. Stronger pages.</strong><br>
-  A free SEO assistant for careful page audits, useful fixes, and private field notes.<br>
-  No signup, payment, or API keys.
-</p>
-<p align="center">
-  <a href="https://github.com/Waqar-743/Audit_AI/releases/download/pip-v1.0.0/auditai-pip.zip"><strong>Download the Chrome extension</strong></a>
-  · <a href="https://github.com/Waqar-743/Audit_AI/releases/tag/pip-v1.0.0">Release notes & assets</a>
-</p>
-
 ## Pip: the free SEO assistant and Chrome extension
 
 Pip lives alongside the original website at `/assistant`. No signup, payment, external AI service, or provider keys are required. It shares deterministic, evidence-based audit rules with the local Chrome extension and uses the website's existing charcoal, warm-white, and lime colors.
