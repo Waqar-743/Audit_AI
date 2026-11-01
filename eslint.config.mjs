@@ -13,6 +13,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "extension/dist/**",
+    "skills/auditai-seo/scripts/**",
     "artifacts/**",
   ]),
 ]);

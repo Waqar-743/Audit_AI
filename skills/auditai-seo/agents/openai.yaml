@@ -1,0 +1,4 @@
+interface:
+  display_name: "AuditAI SEO"
+  short_description: "Evidence-based page audits and practical SEO fixes"
+  default_prompt: "Use $auditai-seo to audit this page, explain the evidence, and prioritize verifiable fixes."

@@ -83,6 +83,25 @@ Browser verification starts a separate production test server on port 3100 and s
 
 The existing queue-backed AI-readiness scanner is documented below. Its optional providers and environment settings are separate from Pip's free audit path.
 
+### Portable SEO agent skill
+
+[`skills/auditai-seo`](skills/auditai-seo/SKILL.md) packages Pip's evidence-based
+audit workflow for agents reviewing any website, supplied HTML, or repository.
+It includes professional audit/reporting guidelines and optional standalone
+capture/scoring scripts generated from the same shared rules. No AuditAI server,
+account, or provider key is required. Partial/manual audits clearly state what
+was not tested instead of inventing a score.
+
+```bash
+npm run build:skill
+npm test
+npm run test:skill:browser
+```
+
+The build writes an allowlisted ZIP and SHA-256 checksum under `artifacts/`.
+See [docs/agent-skill.md](docs/agent-skill.md) for architecture, agent capabilities,
+usage, validation, and Agensi submission guidelines.
+
 AuditAI is a Next.js 16 application that scans public websites and generates an AI-readiness report across four pillars:
 
 - Schema Markup
