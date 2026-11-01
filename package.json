@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "pretest": "npm run build:skill",
     "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "build:extension": "node scripts/build-extension.mjs",
+    "build:skill": "node scripts/build-skill.mjs",
+    "test:skill:browser": "node tests/skill-browser-smoke.mjs",
     "prebuild": "npm run build:extension",
     "predev": "npm run build:extension",
     "test:browser": "node scripts/verify-browser.mjs"
